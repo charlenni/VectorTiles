@@ -17,7 +17,7 @@ namespace VectorTiles.MapboxGL.Parser
         /// <param name="offsetX">Offset in X direction because of overzooming</param>
         /// <param name="offsetY">Offset in Y direction because of overzooming</param>
         /// <returns>List of VectorTileLayers, which contain Name and VectorTilesFeatures of each layer, this tile containing</returns>
-        public static IList<VectorTileFeature> Parse(TileInfo tileInfo, Stream stream, int overzoom, float offsetX, float offsetY, float scale)
+        public static IList<VectorTileFeature> Parse(TileInfo tileInfo, Stream stream, Overzoom overzoom, float scale)
         {
             // Get tile information from Pbf format
             var tile = Serializer.Deserialize<Tile>(stream);
@@ -30,7 +30,7 @@ namespace VectorTiles.MapboxGL.Parser
                 // Convert all features from Mapbox format into Mapsui format
                 foreach (var feature in layer.Features)
                 {
-                    var vectorTileFeature = FeatureParser.Parse(tileInfo, layer.Name, feature, layer.Keys, layer.Values, layer.Extent, overzoom, offsetX, offsetY, scale);
+                    var vectorTileFeature = FeatureParser.Parse(tileInfo, layer.Name, feature, layer.Keys, layer.Values, layer.Extent, overzoom, scale);
 
                     // Add to layer
                     features.Add(vectorTileFeature);

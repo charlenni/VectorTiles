@@ -45,7 +45,7 @@ namespace Factory
             {
                 // Calc for Google link: Y = 2^zoom - Y - 1
                 //Index = new TileIndex(68238, 83276, "17") // Google: https://a.tile.openstreetmap.org/17/68238/47795.png
-                //Index = new TileIndex(34118, 41636, "16") // Google: https://a.tile.openstreetmap.org/16/34119/23897.png
+                Index = new TileIndex(34118, 41636, "16") // Google: https://a.tile.openstreetmap.org/16/34119/23897.png
                 //Index = new TileIndex(17059, 20819, "15") // Google: https://a.tile.openstreetmap.org/15/17059/11948.png
                 //Index = new TileIndex(8529, 10409, "14") //  Google: https://a.tile.openstreetmap.org/14/8529/5974.png
                 //Index = new TileIndex(4264, 5204, "13")
@@ -59,7 +59,7 @@ namespace Factory
                 //Index = new TileIndex(16, 20, "5")
                 //Index = new TileIndex(8, 10, "4")
                 //Index = new TileIndex(4, 5, "3")
-                Index = new TileIndex(2, 2, "2")
+                //Index = new TileIndex(2, 2, "2")
                 //Index = new TileIndex(1, 1, "1")
                 //Index = new TileIndex(0, 0, "0")
             };

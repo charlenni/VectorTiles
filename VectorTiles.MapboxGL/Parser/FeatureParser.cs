@@ -21,11 +21,11 @@ namespace VectorTiles.MapboxGL.Parser
         /// <param name="offsetX">Offset in X direction because of overzooming</param>
         /// <param name="offsetY">Offset in Y direction because of overzooming</param>
         /// <returns></returns>
-        public static VectorTileFeature Parse(TileInfo tileInfo, string layerName, Feature feature, List<string> keys, List<Value> values, uint extent, int overzoom, float offsetX, float offsetY, float scale)
+        public static VectorTileFeature Parse(TileInfo tileInfo, string layerName, Feature feature, List<string> keys, List<Value> values, uint extent, Overzoom overzoom, float scale)
         {
             var vtf = new VectorTileFeature(layerName, feature.Id.ToString());
 
-            var geometries =  GeometryParser.ParseGeometry(feature.Geometry, feature.Type, overzoom, offsetX, offsetY, scale);
+            var geometries =  GeometryParser.ParseGeometry(feature.Geometry, feature.Type, overzoom, scale);
 
             int i;
 

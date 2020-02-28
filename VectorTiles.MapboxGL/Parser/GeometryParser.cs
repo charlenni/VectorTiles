@@ -15,7 +15,7 @@ namespace VectorTiles.MapboxGL.Parser
         /// <param name="offsetX">Offset in X direction because of overzooming</param>
         /// <param name="offsetY">Offset in Y direction because of overzooming</param>
         /// <returns>List of list of points in world coordinates</returns>
-        public static List<List<Coordinate>> ParseGeometry(List<uint> geom, GeomType geomType, int overzoom, float offsetX, float offsetY, float scale)
+        public static List<List<Coordinate>> ParseGeometry(List<uint> geom, GeomType geomType, Overzoom overzoom, float scale)
         {
             const uint cmdMoveTo = 1;
             //const uint cmdLineTo = 2;
@@ -70,7 +70,8 @@ namespace VectorTiles.MapboxGL.Parser
                 y = y + ldy;
 
                 // Correct coordinates for overzoom
-                var coord = new Coordinate((x * overzoom - offsetX) * scale, (y * overzoom - offsetY) * scale);
+                var coord = new Coordinate((x * overzoom.Scale - overzoom.OffsetX) * scale, 
+                                           (y * overzoom.Scale - overzoom.OffsetY) * scale);
 
                 coords?.Add(coord);
             }

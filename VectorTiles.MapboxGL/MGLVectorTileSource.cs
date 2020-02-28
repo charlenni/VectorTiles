@@ -53,7 +53,7 @@ namespace VectorTiles.MapboxGL
             Polygon geometry;
 
             // Get data for this tile
-            var (tileData, overzoom, offsetX, offsetY) = GetTileData(tileInfo);
+            var (tileData, overzoom) = GetTileData(tileInfo);
 
             if (tileData == null)
                 // We don't find any data for this tile, even if we check lower zoom levels
@@ -64,12 +64,12 @@ namespace VectorTiles.MapboxGL
             // Than the offset is substracted. With this, the searched data is between 0 and 4096.
             // Than all coordinates scaled by TileSize/tileSizeOfMGLVectorData, so that all coordinates
             // are between 0 and TileSize.
-            var features = GetFeatures(tileInfo, tileData, overzoom, offsetX, offsetY, TileSize / tileSizeOfMGLVectorData);
+            var features = GetFeatures(tileInfo, tileData, overzoom, TileSize / tileSizeOfMGLVectorData);
 
             if (features.Count == 0)
                 return (null, null);
 
-            var result = new VectorTile(TileSize, (int)Math.Log(overzoom, 2));
+            var result = new VectorTile(TileSize, (int)Math.Log(overzoom.Scale, 2));
 
             // Vector tiles have always a size of 4096 x 4096, but there could be overzoom (use of lower zoom level)
             // Drawing rect is only the part, that should later visible. With overzoom, only a part of the tile is used.
@@ -182,7 +182,7 @@ namespace VectorTiles.MapboxGL
         /// </remarks>
         /// <param name="tileInfo">Tile info for tile to get data for</param>
         /// <returns>Raw tile data, factor for enlargement for this data and offsets for parts of this data, which to use</returns>
-        private (byte[], int, float, float) GetTileData(TileInfo tileInfo)
+        private (byte[], Overzoom) GetTileData(TileInfo tileInfo)
         {
             var zoom = (int)float.Parse(tileInfo.Index.Level);
             var scale = 1;
@@ -194,7 +194,7 @@ namespace VectorTiles.MapboxGL
             var tileData = Source.GetTile(tileInfo);
 
             if (tileData != null)
-                return (tileData, scale, offsetX, offsetY);
+                return (tileData, Overzoom.None);
 
             var info = tileInfo;
             var row = info.Index.Row;
@@ -203,8 +203,6 @@ namespace VectorTiles.MapboxGL
             while (tileData == null && zoom >= 0)
             {
                 scale <<= 1;
-                var newCol = col >> 1;
-                var newRow = row >> 1;
                 offsetX = offsetX + (col % 2) * offsetFactor;
                 offsetY = offsetY + (row % 2) * offsetFactor * (Source.Schema.YAxis == YAxis.TMS ? +1f : -1f);
                 zoom--;
@@ -217,10 +215,12 @@ namespace VectorTiles.MapboxGL
 
             offsetY = offsetFactor - offsetY + (Source.Schema.YAxis == YAxis.TMS ? -4096f : 0f);
 
-            return (tileData, scale, offsetX, offsetY);
+            var overzoom = new Overzoom(scale, offsetX, offsetY);
+
+            return (tileData, overzoom);
         }
 
-        private IList<VectorTileFeature> GetFeatures(TileInfo tileInfo, byte[] tileData, int overzoom, float offsetX, float offsetY, float scale)
+        private IList<VectorTileFeature> GetFeatures(TileInfo tileInfo, byte[] tileData, Overzoom overzoom, float scale)
         {
             // Parse tile and convert it to a feature list
             Stream stream = new MemoryStream(tileData);
@@ -228,7 +228,7 @@ namespace VectorTiles.MapboxGL
             if (IsGZipped(stream))
                 stream = new GZipStream(stream, CompressionMode.Decompress);
 
-            var features = VectorTileParser.Parse(tileInfo, stream, overzoom, offsetX, offsetY, scale);
+            var features = VectorTileParser.Parse(tileInfo, stream, overzoom, scale);
 
             System.Diagnostics.Debug.WriteLine($"Cached Tile Level={tileInfo.Index.Level}, Col={tileInfo.Index.Col}, Row={tileInfo.Index.Row}");
 
