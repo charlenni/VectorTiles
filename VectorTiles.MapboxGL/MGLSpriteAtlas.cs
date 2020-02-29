@@ -95,7 +95,7 @@ namespace VectorTiles.MapboxGL
         /// <param name="atlas">SKImage of sprite atlas</param>
         private void CreateSprites(string json, SKImage atlas)
         {
-            var sprites = JsonConvert.DeserializeObject<Dictionary<string, Json.Sprite>>(json);
+            var sprites = JsonConvert.DeserializeObject<Dictionary<string, Json.JsonSprite>>(json);
 
             foreach (var sprite in sprites)
             {

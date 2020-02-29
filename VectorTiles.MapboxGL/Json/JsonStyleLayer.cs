@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 
 namespace VectorTiles.MapboxGL.Json
 {
-    public class StyleLayer
+    public class JsonStyleLayer
     {
         [JsonProperty("id")]
         public string Id { get; set; }
@@ -13,7 +13,7 @@ namespace VectorTiles.MapboxGL.Json
         public string Type { get; set; }
 
         [JsonProperty("paint")]
-        public Paint Paint { get; set; }
+        public JsonPaint Paint { get; set; }
 
         [JsonProperty("interactive")]
         public bool Interactive { get; set; }
@@ -43,7 +43,7 @@ namespace VectorTiles.MapboxGL.Json
         //public Metadata { get; set; }
 
         [JsonProperty("layout")]
-        public Layout Layout { get; set; }
+        public JsonLayout Layout { get; set; }
 
         [JsonProperty("ref")]
         public string Ref { get; set; }

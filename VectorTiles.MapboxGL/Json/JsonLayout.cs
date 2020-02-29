@@ -1,13 +1,14 @@
 ﻿using VectorTiles.MapboxGL.Converter;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using VectorTiles.MapboxGL.Expressions;
 
 namespace VectorTiles.MapboxGL.Json
 {
     /// <summary>
     /// Class holding Layout data in Json format
     /// </summary>
-    public class Layout
+    public class JsonLayout
     {
         [JsonConverter(typeof(StoppedStringConverter))]
         [JsonProperty("line-cap")]

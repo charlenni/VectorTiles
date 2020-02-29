@@ -1,9 +1,9 @@
-﻿using VectorTiles.MapboxGL.Extensions;
-using VectorTiles.MapboxGL.Json;
+﻿using VectorTiles.MapboxGL.Json;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using VectorTiles.MapboxGL.Expressions;
 
 namespace VectorTiles.MapboxGL.Converter
 {
@@ -11,7 +11,7 @@ namespace VectorTiles.MapboxGL.Converter
     {
         public override bool CanConvert(Type objectType)
         {
-            return objectType == typeof(StoppedFloat) || objectType == typeof(int);
+            return objectType == typeof(JsonStoppedFloat) || objectType == typeof(int);
             //return typeof(StoppedDouble).IsAssignableFrom(objectType) || typeof(int).IsAssignableFrom(objectType);
         }
 

@@ -55,7 +55,7 @@ namespace VectorTiles.MapboxGL.Converter
         public static object CheckValue(JValue value)
         {
             if (value != null && value.Type != JTokenType.Boolean && value.Type != JTokenType.Float && value.Type != JTokenType.Integer && value.Type != JTokenType.String)
-                throw new ArgumentException("filter expression value must be a bool, float or string");
+                throw new ArgumentException("Filter expression value must be a bool, float or string");
 
             return value;
         }
@@ -63,7 +63,7 @@ namespace VectorTiles.MapboxGL.Converter
         public static GeometryType ToGeometryType(JValue value)
         {
             if (value.Type != JTokenType.String)
-                throw new ArgumentException("value for $type filter must be a string");
+                throw new ArgumentException("Value for $type filter must be a string");
 
             var type = value.ToString();
 
@@ -77,7 +77,7 @@ namespace VectorTiles.MapboxGL.Converter
                     return GeometryType.Polygon;
             }
 
-            throw new ArgumentException("value for $type filter must be Point, LineString or Polygon");
+            throw new ArgumentException("Value for $type filter must be Point, LineString or Polygon");
         }
 
         public static object ToFeatureIdentifier(JValue value)
@@ -88,10 +88,10 @@ namespace VectorTiles.MapboxGL.Converter
         private static IFilter ConvertUnaryFilter(JArray filter, bool invert = false)
         {
             if (filter.Count < 2)
-                throw new ArgumentException("filter expression must have 2 elements");
+                throw new ArgumentException("Filter expression must have 2 elements");
 
             if (filter[1].Type != JTokenType.String)
-                throw new ArgumentException("filter expression key must be a string");
+                throw new ArgumentException("Filter expression key must be a string");
 
             var key = filter[1].ToString();
 
@@ -114,10 +114,10 @@ namespace VectorTiles.MapboxGL.Converter
         private static IFilter ConvertEqualityFilter(JArray filter, bool invert = false)
         {
             if (filter.Count < 3)
-                throw new ArgumentException("filter expression must have 3 elements");
+                throw new ArgumentException("Filter expression must have 3 elements");
 
             if (filter[1].Type != JTokenType.String)
-                throw new ArgumentException("filter expression key must be a string");
+                throw new ArgumentException("Filter expression key must be a string");
 
             var key = filter[1].ToString();
 
@@ -157,10 +157,10 @@ namespace VectorTiles.MapboxGL.Converter
         private static IFilter ConvertBinaryFilter<T>(JArray filter) where T : BinaryFilter
         {
             if (filter.Count < 3)
-                throw new ArgumentException("filter expression must have 3 elements");
+                throw new ArgumentException("Filter expression must have 3 elements");
 
             if (filter[1].Type != JTokenType.String)
-                throw new ArgumentException("filter expression key must be a string");
+                throw new ArgumentException("Filter expression key must be a string");
 
             var key = filter[1].ToString();
             var filterValue = CheckValue(filter[2] as JValue);
@@ -174,10 +174,10 @@ namespace VectorTiles.MapboxGL.Converter
         private static IFilter ConvertSetFilter(JArray filter, bool invert = false)
         {
             if (filter.Count < 2)
-                throw new ArgumentException("filter expression must have 2 elements");
+                throw new ArgumentException("Filter expression must have 2 elements");
 
             if (filter[1].Type != JTokenType.String)
-                throw new ArgumentException("filter expression key must be a string");
+                throw new ArgumentException("Filter expression key must be a string");
 
             var key = filter[1].ToString();
 
@@ -234,7 +234,7 @@ namespace VectorTiles.MapboxGL.Converter
             for (int i = 1; i < filter.Count; i++)
             {
                 if (filter[i].Type != JTokenType.Array)
-                    throw new ArgumentException("compound filters must be arrays");
+                    throw new ArgumentException("Compound filters must be arrays");
 
                 var element = ConvertFilter((JArray)filter[i]);
 
@@ -271,13 +271,13 @@ namespace VectorTiles.MapboxGL.Converter
                 return ConvertExpressionFilter(filter);
 
             if (filter == null)
-                throw new ArgumentException("filter expression must be an array");
+                throw new ArgumentException("Filter expression must be an array");
 
             if (filter.Count < 1)
-                throw new ArgumentException("filter expression must have at least 1 element");
+                throw new ArgumentException("Filter expression must have at least 1 element");
 
             if (filter[0].Type != JTokenType.String)
-                throw new ArgumentException("filter operator must be a string");
+                throw new ArgumentException("Filter operator must be a string");
 
             var op = filter[0].ToString();
 
@@ -310,7 +310,7 @@ namespace VectorTiles.MapboxGL.Converter
                 case "!has":
                     return ConvertUnaryFilter(filter, true);
                 default:
-                    throw new ArgumentException("filter operator must be one of \"==\", \"!=\", \">\", \">=\", \"<\", \"<=\", \"in\", \"!in\", \"all\", \"any\", \"none\", \"has\", or \"!has\"");
+                    throw new ArgumentException("Filter operator must be one of \"==\", \"!=\", \">\", \">=\", \"<\", \"<=\", \"in\", \"!in\", \"all\", \"any\", \"none\", \"has\", or \"!has\"");
             }
         }
     }

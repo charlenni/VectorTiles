@@ -8,7 +8,7 @@ namespace VectorTiles.MapboxGL.Json
     /// Source in TileJSON format
     /// See https://github.com/mapbox/tilejson-spec/tree/master/2.2.0
     /// </summary>
-    public class Source
+    public class JsonSource
     {
         [JsonProperty("id")]
         public string Id { get; set; }
@@ -26,7 +26,7 @@ namespace VectorTiles.MapboxGL.Json
         public int PixelSize { get; set; }
 
         [JsonProperty("vector_layers")]
-        public IList<StyleLayer> VectorLayers { get; set; }
+        public IList<JsonStyleLayer> VectorLayers { get; set; }
 
         [JsonProperty("tilejson")]
         public string TileJson { get; set; }

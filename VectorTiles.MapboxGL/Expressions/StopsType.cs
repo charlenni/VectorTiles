@@ -1,4 +1,4 @@
-﻿namespace VectorTiles.MapboxGL.Json
+﻿namespace VectorTiles.MapboxGL.Expressions
 {
     public enum StopsType
     {

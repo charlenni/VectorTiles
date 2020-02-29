@@ -7,7 +7,7 @@ namespace VectorTiles.MapboxGL.Json
     /// <summary>
     /// Class holding Sprite data in Json format
     /// </summary>
-    public class Sprite
+    public class JsonSprite
     {
         [JsonProperty("x")]
         public int X { get; set; }

@@ -1,11 +1,11 @@
 ﻿using Newtonsoft.Json;
-using SkiaSharp;
 using System.Collections.Generic;
 using VectorTiles.MapboxGL.Converter;
+using VectorTiles.MapboxGL.Expressions;
 
 namespace VectorTiles.MapboxGL.Json
 {
-    public class Paint
+    public class JsonPaint
     {
         [JsonConverter(typeof(StoppedColorConverter))]
         [JsonProperty("background-color")]

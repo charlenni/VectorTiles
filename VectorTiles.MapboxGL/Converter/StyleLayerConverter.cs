@@ -14,7 +14,7 @@ namespace VectorTiles.MapboxGL.Converter
         /// <param name="styleLayer">Mapbox GL style layer</param>
         /// <param name="spriteAtlas">Dictionary with availible sprites</param>
         /// <returns>A list of Mapsui Styles</returns>
-        public static List<MGLPaint> Convert(EvaluationContext context, StyleLayer styleLayer, MGLSpriteAtlas spriteAtlas)
+        public static List<MGLPaint> Convert(EvaluationContext context, JsonStyleLayer styleLayer, MGLSpriteAtlas spriteAtlas)
         {
             switch (styleLayer.Type)
             {
@@ -36,7 +36,7 @@ namespace VectorTiles.MapboxGL.Converter
             return new List<MGLPaint>();
         }
 
-        public static List<MGLPaint> ConvertBackgroundLayer(StyleLayer style, MGLSpriteAtlas spriteAtlas)
+        public static List<MGLPaint> ConvertBackgroundLayer(JsonStyleLayer style, MGLSpriteAtlas spriteAtlas)
         {
             // visibility
             //   Optional enum. One of visible, none. Defaults to visible.
@@ -120,7 +120,7 @@ namespace VectorTiles.MapboxGL.Converter
             return new List<MGLPaint> { brush };
         }
 
-        public static List<MGLPaint> ConvertRasterLayer(StyleLayer style)
+        public static List<MGLPaint> ConvertRasterLayer(JsonStyleLayer style)
         {
             // visibility
             //   Optional enum. One of visible, none. Defaults to visible.
@@ -176,7 +176,7 @@ namespace VectorTiles.MapboxGL.Converter
             return new List<MGLPaint>() { brush };
         }
 
-        public static List<MGLPaint> ConvertFillLayer(StyleLayer layer, MGLSpriteAtlas spriteAtlas)
+        public static List<MGLPaint> ConvertFillLayer(JsonStyleLayer layer, MGLSpriteAtlas spriteAtlas)
         {
             var layout = layer?.Layout;
             var paint = layer?.Paint;
@@ -339,7 +339,7 @@ namespace VectorTiles.MapboxGL.Converter
             return new List<MGLPaint>() { area, line };
         }
 
-        public static List<MGLPaint> ConvertLineLayer(StyleLayer layer, MGLSpriteAtlas spriteAtlas)
+        public static List<MGLPaint> ConvertLineLayer(JsonStyleLayer layer, MGLSpriteAtlas spriteAtlas)
         {
             var layout = layer?.Layout;
             var paint = layer?.Paint;
@@ -553,7 +553,7 @@ namespace VectorTiles.MapboxGL.Converter
             return new List<MGLPaint>() { line };
         }
 
-        public static List<MGLPaint> ConvertSymbolLayer(StyleLayer styleLayer, MGLSpriteAtlas spriteAtlas)
+        public static List<MGLPaint> ConvertSymbolLayer(JsonStyleLayer styleLayer, MGLSpriteAtlas spriteAtlas)
         {
             string styleLabelText = string.Empty;
             List<MGLPaint> result = new List<MGLPaint>();

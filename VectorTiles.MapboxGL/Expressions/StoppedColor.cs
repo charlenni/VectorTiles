@@ -1,16 +1,16 @@
-﻿using Newtonsoft.Json;
-using SkiaSharp;
+﻿using SkiaSharp;
 using System;
 using System.Collections.Generic;
 
-namespace VectorTiles.MapboxGL.Json
+namespace VectorTiles.MapboxGL.Expressions
 {
+    /// <summary>
+    /// Class holding StoppedColor data
+    /// </summary>
     public class StoppedColor
     {
-        [JsonProperty("base")]
         public float Base { get; set; } = 1f;
 
-        [JsonProperty("stops")]
         public IList<KeyValuePair<float, SKColor>> Stops { get; set; }
 
         public SKColor SingleVal { get; set; }

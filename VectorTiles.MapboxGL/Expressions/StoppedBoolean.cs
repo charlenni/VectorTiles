@@ -1,14 +1,12 @@
-﻿using Newtonsoft.Json;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace VectorTiles.MapboxGL.Json
+namespace VectorTiles.MapboxGL.Expressions
 {
     /// <summary>
-    /// Class holding StoppedString data in Json format
+    /// Class holding StoppedBoolean data
     /// </summary>
     public class StoppedBoolean
     {
-        [JsonProperty("stops")]
         public IList<KeyValuePair<float, bool>> Stops { get; set; }
 
         public bool? SingleVal { get; set; } = null;

@@ -1,17 +1,14 @@
-﻿using Newtonsoft.Json;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace VectorTiles.MapboxGL.Json
+namespace VectorTiles.MapboxGL.Expressions
 {
     /// <summary>
-    /// Class holding StoppedString data in Json format
+    /// Class holding StoppedString data
     /// </summary>
     public class StoppedString
     {
-        [JsonProperty("base")]
         public float Base { get; set; } = 1f;
 
-        [JsonProperty("stops")]
         public IList<KeyValuePair<float, string>> Stops { get; set; }
 
         public string SingleVal { get; set; } = string.Empty;

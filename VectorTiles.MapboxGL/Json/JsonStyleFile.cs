@@ -7,7 +7,7 @@ namespace VectorTiles.MapboxGL.Json
     /// <summary>
     /// Class for holding MapboxGL file data in Json format
     /// </summary>
-    public class StyleFile
+    public class JsonStyleFile
     {
         [JsonProperty("version")]
         public int Version { get; set; }
@@ -19,7 +19,7 @@ namespace VectorTiles.MapboxGL.Json
         //public Metadata Metadata { get; set; }
 
         [JsonProperty("sources")]
-        public Dictionary<string, Source> Sources { get; set; }
+        public Dictionary<string, JsonSource> Sources { get; set; }
 
         [JsonProperty("sprite")]
         public string Sprite { get; set; }
@@ -28,7 +28,7 @@ namespace VectorTiles.MapboxGL.Json
         public string Glyphs { get; set; }
 
         [JsonProperty("layers")]
-        public IList<StyleLayer> StyleLayers { get; set; }
+        public IList<JsonStyleLayer> StyleLayers { get; set; }
 
         [JsonProperty("created")]
         public DateTime Created { get; set; }

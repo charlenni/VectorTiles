@@ -5,7 +5,7 @@ namespace VectorTiles.MapboxGL
 {
     public class MGLSprite : ISprite
     {
-        public MGLSprite(KeyValuePair<string, Json.Sprite> sprite, SKImage image)
+        public MGLSprite(KeyValuePair<string, Json.JsonSprite> sprite, SKImage image)
         {
             Name = sprite.Key;
             Image = image;

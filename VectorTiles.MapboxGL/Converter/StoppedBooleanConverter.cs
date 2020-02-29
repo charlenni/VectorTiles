@@ -1,9 +1,9 @@
-﻿using VectorTiles.MapboxGL.Extensions;
-using VectorTiles.MapboxGL.Json;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using VectorTiles.MapboxGL.Expressions;
+using VectorTiles.MapboxGL.Json;
 
 namespace VectorTiles.MapboxGL.Converter
 {
@@ -11,7 +11,7 @@ namespace VectorTiles.MapboxGL.Converter
     {
         public override bool CanConvert(Type objectType)
         {
-            return objectType == typeof(StoppedBoolean) || objectType == typeof(bool);
+            return objectType == typeof(JsonStoppedBoolean) || objectType == typeof(bool);
         }
 
         public override object ReadJson(JsonReader reader,

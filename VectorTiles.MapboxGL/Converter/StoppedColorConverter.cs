@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
+using VectorTiles.MapboxGL.Expressions;
 
 namespace VectorTiles.MapboxGL.Converter
 {
@@ -12,7 +13,7 @@ namespace VectorTiles.MapboxGL.Converter
     {
         public override bool CanConvert(Type objectType)
         {
-            return objectType == typeof(StoppedString) || objectType == typeof(string);
+            return objectType == typeof(JsonStoppedString) || objectType == typeof(string);
             //return typeof(StoppedDouble).IsAssignableFrom(objectType) || typeof(int).IsAssignableFrom(objectType);
         }
 

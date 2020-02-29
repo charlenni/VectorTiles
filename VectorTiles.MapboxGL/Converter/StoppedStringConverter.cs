@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using VectorTiles.MapboxGL.Expressions;
 
 namespace VectorTiles.MapboxGL.Converter
 {
@@ -11,7 +12,7 @@ namespace VectorTiles.MapboxGL.Converter
     {
         public override bool CanConvert(Type objectType)
         {
-            return objectType == typeof(StoppedString) || objectType == typeof(string);
+            return objectType == typeof(JsonStoppedString) || objectType == typeof(string);
         }
 
         public override object ReadJson(JsonReader reader,
