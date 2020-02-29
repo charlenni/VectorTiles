@@ -39,11 +39,6 @@ namespace VectorTiles
         public TagsCollection Tags { get; set; } = new TagsCollection();
 
         public uint Extent { get; set; }
-
-        /// <summary>
-        /// The rank for classification of this feature
-        /// </summary>
-        public int Rank { get; set; }
     }
 }
 

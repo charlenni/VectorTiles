@@ -1,17 +1,16 @@
 ﻿using System.Collections.Generic;
-using Newtonsoft.Json.Linq;
 
 namespace VectorTiles.Filter
 {
     public class NotInFilter : Filter
     {
         public string Key { get; }
-        public JArray Values { get; }
+        public List<object> Values { get; }
 
-        public NotInFilter(string key, IEnumerable<JValue> values)
+        public NotInFilter(string key, IEnumerable<object> values)
         {
             Key = key;
-            Values = new JArray();
+            Values = new List<object>();
 
             foreach (var value in values)
                 Values.Add(value);

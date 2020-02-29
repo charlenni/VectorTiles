@@ -123,9 +123,6 @@ namespace VectorTiles.MapboxGL.Parser
             // now add the tags
             vtf.Tags.Add(TagsParser.Parse(keys, values, feature.Tags));
 
-            if (vtf.Tags.TryGetValue("rank", out var rank) && rank.Type == Newtonsoft.Json.Linq.JTokenType.Integer)
-                vtf.Rank = rank.ToObject<int>();
-
             return vtf;
         }
     }

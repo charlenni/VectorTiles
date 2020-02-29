@@ -1,20 +1,19 @@
 ﻿using System.Collections.Generic;
 using System.Text;
-using Newtonsoft.Json.Linq;
 
 namespace VectorTiles
 {
     /// <summary>
     /// Represents a simple tags collection based on a dictionary.
     /// </summary>
-    public class TagsCollection : Dictionary<string, JValue>
+    public class TagsCollection : Dictionary<string, object>
     {
         private const char KeyValueSeparator = '=';
 
         /// <summary>
         /// Creates a new tags collection.
         /// </summary>
-        public TagsCollection(params KeyValuePair<string, JValue>[] tags)
+        public TagsCollection(params KeyValuePair<string, object>[] tags)
         {
             foreach (var tag in tags)
                 Add(tag.Key, tag.Value);
@@ -24,7 +23,7 @@ namespace VectorTiles
         /// Creates a new tags collection initialized with the given existing tags.
         /// </summary>
         /// <param name="tags"></param>
-        public TagsCollection(IEnumerable<KeyValuePair<string, JValue>> tags)
+        public TagsCollection(IEnumerable<KeyValuePair<string, object>> tags)
         {
             foreach (var tag in tags)
                 Add(tag.Key, tag.Value);
@@ -40,7 +39,7 @@ namespace VectorTiles
             {
                 foreach (KeyValuePair<string, string> pair in tags)
                 {
-                    Add(pair.Key, new JValue(pair.Value));
+                    Add(pair.Key, pair.Value);
                 }
             }
         }
@@ -53,14 +52,14 @@ namespace VectorTiles
         {
             var splitPosition = tag.IndexOf(KeyValueSeparator);
 
-            Add(tag.Substring(0, splitPosition), new JValue(tag.Substring(splitPosition + 1)));
+            Add(tag.Substring(0, splitPosition), tag.Substring(splitPosition + 1));
         }
 
         /// <summary>
         /// Adds a list of tags to this collection.
         /// </summary>
         /// <param name="tags">List of tags</param>
-        public void Add(IEnumerable<KeyValuePair<string, JValue>> tags)
+        public void Add(IEnumerable<KeyValuePair<string, object>> tags)
         {
             foreach(var tag in tags)
                 Add(tag.Key, tag.Value);
@@ -72,9 +71,9 @@ namespace VectorTiles
         /// <param name="key"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool ContainsKeyValue(string key, JValue value)
+        public bool ContainsKeyValue(string key, object value)
         {
-            if (TryGetValue(key, out JValue val))
+            if (TryGetValue(key, out object val))
                 return val.Equals(value);
 
             return false;
@@ -103,7 +102,7 @@ namespace VectorTiles
         /// <param name="key"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool RemoveKeyValue(string key, JValue value)
+        public bool RemoveKeyValue(string key, object value)
         {
             if (ContainsKeyValue(key, value))
             {

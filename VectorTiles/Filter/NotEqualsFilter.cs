@@ -1,13 +1,11 @@
-﻿using Newtonsoft.Json.Linq;
-
-namespace VectorTiles.Filter
+﻿namespace VectorTiles.Filter
 {
     public class NotEqualsFilter : Filter
     {
         public string Key { get; }
-        public JValue Value { get; }
+        public object Value { get; }
 
-        public NotEqualsFilter(string key, JValue value)
+        public NotEqualsFilter(string key, object value)
         {
             Key = key;
             Value = value;

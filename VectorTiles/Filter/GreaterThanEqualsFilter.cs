@@ -1,10 +1,8 @@
-﻿using Newtonsoft.Json.Linq;
-
-namespace VectorTiles.Filter
+﻿namespace VectorTiles.Filter
 {
     public class GreaterThanEqualsFilter : BinaryFilter
     {
-        public GreaterThanEqualsFilter(string key, JValue value) : base(key, value)
+        public GreaterThanEqualsFilter(string key, object value) : base(key, value)
         {
         }
 
@@ -13,8 +11,8 @@ namespace VectorTiles.Filter
             if (feature == null || !feature.Tags.ContainsKey(Key))
                 return false;
 
-            if (feature.Tags[Key].Type == JTokenType.Float ||
-                feature.Tags[Key].Type == JTokenType.Integer)
+            if (feature.Tags[Key] is float ||
+                feature.Tags[Key] is int)
                 return (float)feature.Tags[Key] >= (float)Value;
 
             return false;

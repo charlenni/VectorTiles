@@ -1,18 +1,15 @@
-﻿using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
-
-namespace VectorTiles.Filter
+﻿namespace VectorTiles.Filter
 {
     public abstract class BinaryFilter : Filter
     {
         public string Key { get; }
-        public JValue Value { get; }
+        public object Value { get; }
 
         public BinaryFilter()
         {
         }
 
-        public BinaryFilter(string key, JValue value)
+        public BinaryFilter(string key, object value)
         {
             Key = key;
             Value = value;
