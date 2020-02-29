@@ -50,8 +50,6 @@ namespace VectorTiles.MapboxGL
             var tileSizeOfMGLVectorData = 4096f;
             var zoom = float.Parse(tileInfo.Index.Level);
 
-            Polygon geometry;
-
             // Get data for this tile
             var (tileData, overzoom) = GetTileData(tileInfo);
 
@@ -60,7 +58,7 @@ namespace VectorTiles.MapboxGL
                 return null;
 
             // For calculation of feature coordinates:
-            // Coordinates between 0 and 4096. This is now multiplacated with the overzoom factor.
+            // Coordinates are between 0 and 4096. This is now multiplacated with the overzoom factor.
             // Than the offset is substracted. With this, the searched data is between 0 and 4096.
             // Than all coordinates scaled by TileSize/tileSizeOfMGLVectorData, so that all coordinates
             // are between 0 and TileSize.

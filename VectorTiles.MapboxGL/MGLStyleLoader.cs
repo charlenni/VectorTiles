@@ -330,6 +330,7 @@ namespace VectorTiles.MapboxGL
                         break;
                     case "symbol":
                         styleLayer.Type = StyleType.Symbol;
+                        styleLayer.SymbolStyler = StyleLayerConverter.ConvertSymbolLayer(jsonStyleLayer, spriteAtlas);
                         break;
                     case "circle":
                         break;

@@ -1,42 +1,15 @@
-﻿using SkiaSharp;
+﻿using NetTopologySuite.Geometries;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using VectorTiles.MapboxGL.Extensions;
 using VectorTiles.MapboxGL.Json;
 
 namespace VectorTiles.MapboxGL.Converter
 {
     public static class StyleLayerConverter
     {
-        /// <summary>
-        /// Convert given context with Mapbox GL styling layer to a Mapsui Style list
-        /// </summary>
-        /// <param name="context">Context to use while evaluating style</param>
-        /// <param name="jsonStyleLayer">Mapbox GL style layer</param>
-        /// <param name="spriteAtlas">Dictionary with availible sprites</param>
-        /// <returns>A list of Mapsui Styles</returns>
-        public static List<MGLPaint> Convert(EvaluationContext context, JsonStyleLayer jsonStyleLayer, MGLSpriteAtlas spriteAtlas)
-        {
-            switch (jsonStyleLayer.Type)
-            {
-                case "fill":
-                    return ConvertFillLayer(jsonStyleLayer, spriteAtlas);
-                case "line":
-                    return ConvertLineLayer(jsonStyleLayer, spriteAtlas);
-                case "symbol":
-                    return ConvertSymbolLayer(jsonStyleLayer, spriteAtlas);
-                case "circle":
-                    return new List<MGLPaint>();
-                case "raster":
-                    // Shouldn't get here, because raster are directly handled by ConvertRasterLayer
-                    throw new ArgumentException("Raster style could not be converted");
-                case "background":
-                    return ConvertBackgroundLayer(jsonStyleLayer, spriteAtlas);
-            }
-
-            return new List<MGLPaint>();
-        }
-
         public static List<MGLPaint> ConvertBackgroundLayer(JsonStyleLayer jsonStyleLayer, MGLSpriteAtlas spriteAtlas)
         {
             var paint = jsonStyleLayer.Paint;
@@ -526,312 +499,75 @@ namespace VectorTiles.MapboxGL.Converter
             return new List<MGLPaint>() { line };
         }
 
-        public static List<MGLPaint> ConvertSymbolLayer(JsonStyleLayer jsonStyleLayer, MGLSpriteAtlas spriteAtlas)
+        public static MGLSymbolStyler ConvertSymbolLayer(JsonStyleLayer jsonStyleLayer, MGLSpriteAtlas spriteAtlas)
         {
-            string styleLabelText = string.Empty;
-            List<MGLPaint> result = new List<MGLPaint>();
+            var layout = jsonStyleLayer?.Layout;
+            var paint = jsonStyleLayer?.Paint;
 
-/*            if (context.Feature.GeometryType == GeometryType.LineString)
-                styleLabelText = "";
-
-            //return result;
-
-            var paint = styleLayer.Paint;
-            var layout = styleLayer.Layout;
-
-            var styleLabel = new LabelStyle
+            // If we don't have a paint, than there isn't anything that we could do
+            if (paint == null)
             {
-                Enabled = false,
-                Halo = new Pen { Color = Color.Transparent, Width = 0 },
-                CollisionDetection = true,
-                BackColor = null,
-            };
-
-            styleLabel.Font.Size = 16;
-
-            var styleIcon = new SymbolStyle
-            {
-                Enabled = false,
-            };
-
-            // symbol-placement
-            //   Optional enum. One of point, line. Defaults to point. Interval.
-            //   Label placement relative to its geometry. line can only be used on 
-            //   LineStrings and Polygons.
-            if (layout?.SymbolPlacement != null)
-            {
-                switch (layout.SymbolPlacement.Evaluate(context.Zoom))
-                {
-                    case "point":
-                        break;
-                    case "line":
-                        // symbol-spacing
-                        //   Optional number. Units in pixels. Defaults to 250. Requires symbol-placement = line. Exponential.
-                        //   Distance between two symbol anchors.
-                        if (layout?.SymbolSpacing != null)
-                        {
-                            styleLabel.Spacing = layout.SymbolSpacing.Evaluate(context.Zoom);
-                        }
-                        break;
-                }
+                return MGLSymbolStyler.Default;
             }
-            // symbol-avoid-edges
-            //   Optional boolean. Defaults to false. Interval.
-            //   If true, the symbols will not cross tile edges to avoid mutual collisions.
-            //   Recommended in layers that don't have enough padding in the vector tile to prevent 
-            //   collisions, or if it is a point symbol layer placed after a line symbol layer.
 
-            // text-field
-            //   Optional string. Interval.
-            //   Value to use for a text label. Feature properties are specified using tokens like {field_name}.
-            if (layout?.TextField != null)
+            MGLSymbolStyler symbolStyler = new MGLSymbolStyler();
+
+            // icon-allow-overlap
+            //   Optional boolean. Defaults to false. Requires icon-image. Interval.
+            //   If true, the icon will be visible even if it collides with other previously drawn symbols.
+            if (layout?.IconImage != null && layout?.IconAllowOverlap != null)
             {
-                styleLabelText = ReplaceFields(layout.TextField.Trim(), context.Feature.Tags);
+                // TODO
+                symbolStyler.IconAllowOverlap = (bool)layout.IconAllowOverlap.SingleVal;
+            }
 
-                // text-transform
-                //   Optional enum. One of none, uppercase, lowercase. Defaults to none. Requires text-field. Interval.
-                //   Specifies how to capitalize text, similar to the CSS text-transform property.
-                if (layout?.TextTransform != null)
-                {
-                    switch (layout.TextTransform)
-                    {
-                        case "uppercase":
-                            styleLabelText = styleLabelText.ToUpper();
-                            break;
-                        case "lowercase":
-                            styleLabelText = styleLabelText.ToLower();
-                            break;
-                    }
-                }
+            // icon-anchor
+            //   Optional enum. One of center, left, right, top, bottom, top-left, top-right, bottom-left, 
+            //   bottom-right. Defaults to center. Requires text-field. Interval.
+            //   Part of the text placed closest to the anchor.
+            if (layout?.IconImage != null && layout?.IconAnchor != null)
+            {
+                symbolStyler.IconAnchor = layout.IconAnchor.ToDirection();
+            }
 
-                styleLabel.Text = styleLabelText;
+            // icon-color
+            //   Optional color. Defaults to #000000. Requires icon-image. Exponential.
+            //   The color of the icon. This can only be used with sdf icons.
+            if (layout?.IconImage != null && layout?.IconColor != null)
+            {
+                symbolStyler.IconColor = layout.IconColor;
+            }
 
-                // text-color
-                //   Optional color. Defaults to #000000. Requires text-field. Exponential.
-                //   The color with which the text will be drawn.
-                if (paint?.TextColor != null)
-                {
-                    styleLabel.ForeColor = paint.TextColor.Evaluate(context.Zoom);
-                }
+            // icon-halo-blur
+            //   Optional number. Units in pixels. Defaults to 0. Requires icon-image. Exponential.
+            //   Fade out the halo towards the outside.
+            if (layout?.IconImage != null && layout?.IconHaloBlur != null)
+            {
+                symbolStyler.IconHaloBlur = layout.IconHaloBlur;
+            }
 
-                // text-opacity
-                //   Optional number. Defaults to 1. Requires text-field. Exponential.
-                //   The opacity at which the text will be drawn.
-                if (paint?.TextOpacity != null)
-                {
-                }
+            // icon-halo-color
+            //   Optional color. Defaults to rgba(0, 0, 0, 0). Requires icon-image. Exponential.
+            //   The color of the icon's halo. Icon halos can only be used with sdf icons.
+            if (layout?.IconImage != null && layout?.IconHaloColor != null)
+            {
+                symbolStyler.IconHaloColor = layout.IconHaloColor;
+            }
 
-                // text-halo-color
-                //   Optional color. Defaults to rgba(0, 0, 0, 0). Requires text-field. Exponential.
-                //   The color of the text's halo, which helps it stand out from backgrounds.
-                if (paint?.TextHaloColor != null)
-                {
-                    styleLabel.Halo.Color = paint.TextHaloColor.Evaluate(context.Zoom);
-                }
+            // icon-halo-width
+            //   Optional number. Units in pixels. Defaults to 0. Requires icon-image. Exponential.
+            //   Distance of halo to the icon outline.
+            if (layout?.IconImage != null && layout?.IconHaloWidth != null)
+            {
+                symbolStyler.IconHaloWidth = layout.IconHaloWidth;
+            }
 
-                //text-halo-width
-                //   Optional number. Units in pixels. Defaults to 0. Requires text-field. Exponential.
-                //   Distance of halo to the font outline. Max text halo width is 1/4 of the font-size.
-                if (paint?.TextHaloWidth != null)
-                {
-                    styleLabel.Halo.Width = paint.TextHaloWidth.Evaluate(context.Zoom);
-                }
-
-                // text-font
-                //   Optional array. Defaults to Open Sans Regular, Arial Unicode MS Regular. Requires text-field. Interval.
-                //   Font stack to use for displaying text.
-                if (layout?.TextFont != null)
-                {
-                    var fontName = string.Empty;
-
-                    foreach (var font in layout.TextFont)
-                    {
-                        // TODO: Check for fonts
-                        //if (font.exists)
-                        {
-                            fontName = (string)font;
-                            break;
-                        }
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(fontName))
-                        styleLabel.Font.FontFamily = fontName;
-                }
-
-                // text-size
-                //   Optional number. Units in pixels. Defaults to 16. Requires text-field. Exponential.
-                //   Font size.
-                if (layout?.TextSize != null)
-                {
-                    styleLabel.Font.Size = layout.TextSize.Evaluate(context.Zoom);
-                }
-
-                // text-rotation-alignment
-                //   Optional enum. One of map, viewport. Defaults to viewport. Requires text-field. Interval.
-                //   Orientation of text when map is rotated.
-
-                // text-translate
-                //   Optional array. Units in pixels. Defaults to 0, 0. Requires text-field. Exponential.
-                //   Distance that the text's anchor is moved from its original placement.Positive values 
-                //   indicate right and down, while negative values indicate left and up.
-                if (paint?.TextTranslate != null)
-                {
-                    var offset = new Offset
-                    {
-                        X = paint.TextTranslate.Count > 0 ? -paint.TextTranslate[0] : 0,
-                        Y = paint.TextTranslate.Count > 1 ? -paint.TextTranslate[1] : 0
-                    };
-
-                    styleLabel.Offset = offset;
-
-                    // text-translate-anchor
-                    //   Optional enum. One of map, viewport. Defaults to map. Requires text-field. Requires text-translate. Interval.
-                    //   Control whether the translation is relative to the map(north) or viewport(screen).
-
-                    // TODO: Don't know, how to do this in the moment
-                }
-
-                // text-max-width
-                //   Optional number. Units in em. Defaults to 10. Requires text-field. Exponential.
-                //   The maximum line width for text wrapping.
-                if (layout?.TextMaxWidth != null)
-                {
-                    styleLabel.MaxWidth = layout.TextMaxWidth.Evaluate(context.Zoom);
-                }
-
-                // text-line-height
-                //   Optional number. Units in em. Defaults to 1.2. Requires text-field. Exponential.
-                //   Text leading value for multi-line text.
-
-                // text-letter-spacing
-                //   Optional number. Units in em. Defaults to 0. Requires text-field. Exponential.
-                //   Text tracking amount.
-
-                // text-justify
-                //   Optional enum. One of left, center, right. Defaults to center. Requires text-field. Interval.
-                //   Text justification options.
-                if (layout?.TextJustify != null)
-                {
-                    switch (layout.TextJustify)
-                    {
-                        case "left":
-                            styleLabel.Justify = LabelStyle.HorizontalAlignmentEnum.Left;
-                            break;
-                        case "right":
-                            styleLabel.Justify = LabelStyle.HorizontalAlignmentEnum.Right;
-                            break;
-                        default:
-                            styleLabel.Justify = LabelStyle.HorizontalAlignmentEnum.Center;
-                            break;
-                    }
-                }
-
-                // text-anchor
-                //   Optional enum. One of center, left, right, top, bottom, top-left, top-right, bottom-left, 
-                //   bottom-right. Defaults to center. Requires text-field. Interval.
-                //   Part of the text placed closest to the anchor.
-                if (layout?.TextAnchor != null)
-                {
-                    switch (layout.TextAnchor)
-                    {
-                        case "left":
-                            styleLabel.VerticalAlignment = LabelStyle.VerticalAlignmentEnum.Center;
-                            styleLabel.HorizontalAlignment = LabelStyle.HorizontalAlignmentEnum.Left;
-                            break;
-                        case "right":
-                            styleLabel.VerticalAlignment = LabelStyle.VerticalAlignmentEnum.Center;
-                            styleLabel.HorizontalAlignment = LabelStyle.HorizontalAlignmentEnum.Right;
-                            break;
-                        case "top":
-                            styleLabel.VerticalAlignment = LabelStyle.VerticalAlignmentEnum.Top;
-                            styleLabel.HorizontalAlignment = LabelStyle.HorizontalAlignmentEnum.Center;
-                            break;
-                        case "bottom":
-                            styleLabel.VerticalAlignment = LabelStyle.VerticalAlignmentEnum.Bottom;
-                            styleLabel.HorizontalAlignment = LabelStyle.HorizontalAlignmentEnum.Center;
-                            break;
-                        case "top-left":
-                            styleLabel.VerticalAlignment = LabelStyle.VerticalAlignmentEnum.Top;
-                            styleLabel.HorizontalAlignment = LabelStyle.HorizontalAlignmentEnum.Left;
-                            break;
-                        case "top-right":
-                            styleLabel.VerticalAlignment = LabelStyle.VerticalAlignmentEnum.Top;
-                            styleLabel.HorizontalAlignment = LabelStyle.HorizontalAlignmentEnum.Right;
-                            break;
-                        case "bottom-left":
-                            styleLabel.VerticalAlignment = LabelStyle.VerticalAlignmentEnum.Bottom;
-                            styleLabel.HorizontalAlignment = LabelStyle.HorizontalAlignmentEnum.Left;
-                            break;
-                        case "bottom-right":
-                            styleLabel.VerticalAlignment = LabelStyle.VerticalAlignmentEnum.Bottom;
-                            styleLabel.HorizontalAlignment = LabelStyle.HorizontalAlignmentEnum.Right;
-                            break;
-                        default:
-                            styleLabel.VerticalAlignment = LabelStyle.VerticalAlignmentEnum.Center;
-                            styleLabel.HorizontalAlignment = LabelStyle.HorizontalAlignmentEnum.Center;
-                            break;
-                    }
-                }
-
-                // text-max-angle
-                //   Optional number. Units in degrees. Defaults to 45. Requires text-field. 
-                //   Requires symbol-placement = line. Exponential.
-                //   Maximum angle change between adjacent characters.
-
-                // text-rotate
-                //   Optional number. Units in degrees. Defaults to 0. Requires text-field. Exponential.
-                //   Rotates the text clockwise.
-
-                // text-padding
-                //   Optional number. Units in pixels. Defaults to 2. Requires text-field. Exponential.
-                //   Size of the additional area around the text bounding box used for detecting symbol collisions.
-
-                // text-keep-upright
-                //   Optional boolean. Defaults to true. Requires text-field. Requires text-rotation-alignment = map.
-                //   Requires symbol-placement = line. Interval.
-                //   If true, the text may be flipped vertically to prevent it from being rendered upside-down.
-
-                // text-offset
-                //   Optional array. Units in ems. Defaults to 0,0. Requires text-field. Exponential.
-                //   Offset distance of text from its anchor. Positive values indicate right and down, 
-                //   while negative values indicate left and up.
-                if (layout?.TextOffset != null)
-                {
-                    var x = layout.TextOffset[0] * styleLabel.Font.Size;
-                    var y = layout.TextOffset[1] * styleLabel.Font.Size;
-                    styleLabel.Offset = new Offset(x, y, false);
-                }
-
-                // text-allow-overlap
-                //   Optional boolean. Defaults to false. Requires text-field. Interval.
-                //   If true, the text will be visible even if it collides with other previously drawn symbols.
-                if (layout?.TextAllowOverlap != null)
-                {
-                    // TODO
-                    layout.TextAllowOverlap.Evaluate(context.Zoom);
-                }
-
-                // text-ignore-placement
-                //   Optional boolean. Defaults to false. Requires text-field. Interval.
-                //   If true, other symbols can be visible even if they collide with the text.
-                if (layout?.TextIgnorePlacement != null)
-                {
-                    // TODO
-                    layout.TextIgnorePlacement.Evaluate(context.Zoom);
-                }
-
-                // text-optional
-                //   Optional boolean. Defaults to false. Requires text-field. Requires icon-image. Interval.
-                //   If true, icons will display without their corresponding text when the text collides with other symbols and the icon does not.
-                if (layout?.TextOptional != null)
-                {
-                    // TODO
-                    layout.TextOptional.Evaluate(context.Zoom);
-                }
-
-                // text-halo-blur
-                //   Optional number. Units in pixels. Defaults to 0. Requires text-field. Exponential.
-                //   The halo's fadeout distance towards the outside.
+            // icon-ignore-placement
+            //   Optional boolean. Defaults to false. Requires icon-image. Interval.
+            //   If true, other symbols can be visible even if they collide with the icon.
+            if (layout?.IconImage != null && layout?.IconIgnorePlacement != null)
+            {
+                symbolStyler.IconIgnorePlacement = layout.IconIgnorePlacement;
             }
 
             // icon-image
@@ -839,141 +575,465 @@ namespace VectorTiles.MapboxGL.Converter
             //   A string with { tokens } replaced, referencing the data property to pull from. Interval.
             if (layout?.IconImage != null)
             {
-                var name = ReplaceFields(layout.IconImage.Evaluate(context.Zoom), context.Feature.Tags);
-
-                if (!string.IsNullOrEmpty(name) && spriteAtlas.ContainsKey(name) && spriteAtlas[name].Atlas >= 0)
-                {
-                    styleIcon.BitmapId = spriteAtlas[name].Atlas;
-                }
-                else
-                {
-                    // No sprite found
-                    styleIcon.BitmapId = -1;
-                    // Log information
-                    Logging.Logger.Log(Logging.LogLevel.Information, $"Sprite {name} not found");
-                }
-
-                // icon-allow-overlap
-                //   Optional boolean. Defaults to false. Requires icon-image. Interval.
-                //   If true, the icon will be visible even if it collides with other previously drawn symbols.
-                if (layout?.IconAllowOverlap != null)
-                {
-                    // TODO
-                    layout.IconAllowOverlap.Evaluate(context.Zoom);
-                }
-
-                // icon-ignore-placement
-                //   Optional boolean. Defaults to false. Requires icon-image. Interval.
-                //   If true, other symbols can be visible even if they collide with the icon.
-                if (layout?.IconIgnorePlacement != null)
-                {
-                    // TODO
-                    layout.IconIgnorePlacement.Evaluate(context.Zoom);
-                }
-
-                // icon-optional
-                //   Optional boolean. Defaults to false. Requires icon-image. Requires text-field. Interval.
-                //   If true, text will display without their corresponding icons when the icon collides 
-                //   with other symbols and the text does not.
-                if (layout?.IconOptional != null)
-                {
-                    // TODO
-                    layout.IconOptional.Evaluate(context.Zoom);
-                }
-
-                // icon-rotation-alignment
-                //   Optional enum. One of map, viewport. Defaults to viewport. Requires icon-image. Interval.
-                //   Orientation of icon when map is rotated.
-
-                // icon-size
-                //   Optional number. Defaults to 1. Requires icon-image. Exponential.
-                //   Scale factor for icon. 1 is original size, 3 triples the size.
-                if (layout?.IconSize != null)
-                {
-                    styleIcon.SymbolScale = layout.IconSize.Evaluate(context.Zoom);
-                }
-
-                // icon-rotate
-                //   Optional number. Units in degrees. Defaults to 0. Requires icon-image. Exponential.
-                //   Rotates the icon clockwise.
-
-                // icon-padding
-                //   Optional number. Units in pixels. Defaults to 2. Requires icon-image. Exponential.
-                //   Size of the additional area around the icon bounding box used for detecting symbol collisions.
-
-                // icon-keep-upright
-                //   Optional boolean. Defaults to false. Requires icon-image. Requires icon-rotation-alignment = map. Interval.
-                //   Requires symbol-placement = line.
-                //   If true, the icon may be flipped to prevent it from being rendered upside-down.
-
-                // icon-offset
-                //   Optional array. Defaults to 0,0. Requires icon-image. Exponential.
-                //   Offset distance of icon from its anchor. Positive values indicate right and down, 
-                //   while negative values indicate left and up.
-                if (layout?.IconOffset != null)
-                {
-                    var x = layout.IconOffset[0];
-                    var y = layout.IconOffset[1];
-                    styleIcon.SymbolOffset = new Offset(x, y, false);
-                }
-
-                // icon-opacity
-                //   Optional number. Defaults to 1. Requires icon-image. Exponential.
-                //   The opacity at which the icon will be drawn.
-                if (layout?.IconOpacity != null)
-                {
-                    styleIcon.Opacity = layout.IconOpacity.Evaluate(context.Zoom);
-                }
-
-                // icon-color
-                //   Optional color. Defaults to #000000. Requires icon-image. Exponential.
-                //   The color of the icon. This can only be used with sdf icons.
-
-                // icon-halo-color
-                //   Optional color. Defaults to rgba(0, 0, 0, 0). Requires icon-image. Exponential.
-                //   The color of the icon's halo. Icon halos can only be used with sdf icons.
-
-                // icon-halo-width
-                //   Optional number. Units in pixels. Defaults to 0. Requires icon-image. Exponential.
-                //   Distance of halo to the icon outline.
-
-                // icon-halo-blur
-                //   Optional number. Units in pixels. Defaults to 0. Requires icon-image. Exponential.
-                //   Fade out the halo towards the outside.
-
-                // icon-translate
-                //   Optional array. Units in pixels. Defaults to 0, 0. Requires icon-image. Exponential.
-                //   Distance that the icon's anchor is moved from its original placement.
-                //   Positive values indicate right and down, while negative values indicate left and up.
-
-                // icon-translate-anchor
-                //   Optional enum. One of map, viewport. Defaults to map. Requires icon-image. Requires icon-translate. Interval.
-                //   Control whether the translation is relative to the map(north) or viewport(screen).
+                // TODO: Get the right list (see https://docs.mapbox.com/mapbox-gl-js/style-spec/types/#resolvedimage)
+                symbolStyler.IconImage = layout.IconImage;
             }
 
-            if (!string.IsNullOrEmpty(styleLabelText))
+            // icon-keep-upright
+            //   Optional boolean. Defaults to false. Requires icon-image. Requires icon-rotation-alignment = "map". Interval.
+            //   Requires symbol-placement = "line" or "line-center".
+            //   If true, the icon may be flipped to prevent it from being rendered upside-down.
+            if (layout?.IconImage != null && 
+                layout?.IconRotationAlignment?.ToLower() == "map" &&
+                //(layout?.SymbolPlacement?.ToLower() == "line" || layout?.SymbolPlacement?.ToLower() == "line-center") &&
+                layout?.IconKeepUpright != null)
             {
-                styleLabel.Enabled = true;
-
-                result.Add(styleLabel);
+                symbolStyler.IconKeepUpright = layout.IconKeepUpright;
             }
 
-            if (styleIcon.BitmapId >= 0)
+            // icon-offset
+            //   Optional array. Defaults to 0,0. Requires icon-image. Exponential.
+            //   Offset distance of icon from its anchor. Positive values indicate right and down, 
+            //   while negative values indicate left and up.
+            if (layout?.IconImage != null && layout?.IconOffset != null)
             {
-                styleIcon.Enabled = true;
-
-                result.Add(styleIcon);
+                // TODO: Is a stopped value
+                symbolStyler.IconOffset = new Offset(layout.IconOffset[0], layout.IconOffset[1]);
             }
 
-            if (symbolProvider != null)
+            // icon-opacity
+            //   Optional number. Defaults to 1. Requires icon-image. Exponential.
+            //   The opacity at which the icon will be drawn.
+            if (layout?.IconImage != null && layout?.IconOpacity != null)
             {
-                symbolProvider.Add(new Symbol(context.Feature, styleIcon, styleLabel, styleLayer.ZIndex));
-
-                // If there is an SymbolLayer, than it handles drawing of symbols
-                result = null;
+                symbolStyler.IconOpacity = layout.IconOpacity;
             }
-*/
-            return result;
+
+            // icon-optional
+            //   Optional boolean. Defaults to false. Requires icon-image. Requires text-field. Interval.
+            //   If true, text will display without their corresponding icons when the icon collides 
+            //   with other symbols and the text does not.
+            if (layout?.IconImage != null && layout?.TextField != null && layout?.IconOptional != null)
+            {
+                symbolStyler.IconOptional = layout.IconOptional;
+            }
+
+            // icon-padding
+            //   Optional number. Units in pixels. Defaults to 2. Requires icon-image. Exponential.
+            //   Size of the additional area around the icon bounding box used for detecting symbol collisions.
+            if (layout?.IconImage != null && layout?.IconPadding != null)
+            {
+                symbolStyler.IconPadding = layout.IconPadding;
+            }
+
+            // icon-pitch-alignment
+            //   Optional enum. One of "map", "viewport", "auto". Defaults to "auto". Requires icon-image. 
+            if (layout?.IconImage != null && layout?.IconPitchAlignment != null)
+            {
+                symbolStyler.IconPitchAlignment = layout.IconPitchAlignment.ToMapAlignment();
+            }
+
+            // icon-rotate
+            //   Optional number. Units in degrees. Defaults to 0. Requires icon-image. Exponential.
+            //   Rotates the icon clockwise.
+            if (layout?.IconImage != null && layout?.IconRotate != null)
+            {
+                symbolStyler.IconRotate = layout.IconRotate;
+            }
+
+            // icon-rotation-alignment
+            //   Optional enum. One of map, viewport. Defaults to viewport. Requires icon-image. Interval.
+            //   Orientation of icon when map is rotated.
+            if (layout?.IconImage != null && layout?.IconRotationAlignment != null)
+            {
+                symbolStyler.IconRotationAlignment = layout.IconRotationAlignment.ToMapAlignment();
+            }
+
+            // icon-size
+            //   Optional number. Defaults to 1. Requires icon-image. Exponential.
+            //   Scale factor for icon. 1 is original size, 3 triples the size.
+            if (layout?.IconImage != null && layout?.IconSize != null)
+            {
+                symbolStyler.IconSize = layout.IconSize;
+            }
+
+            // icon-text-fit
+            //   Optional enum. One of "none", "width", "height", "both". Defaults to "none". 
+            //   Requires icon-image. Requires text-field. 
+            if (layout?.IconImage != null && layout?.TextField != null && layout?.IconTextFit != null)
+            {
+                symbolStyler.IconTextFit = layout.IconTextFit.ToTextFit();
+            }
+
+            // icon-text-fit-padding
+            //   Optional array of numbers. Units in pixels.Defaults to[0, 0, 0, 0]. Requires icon-image.
+            //   Requires text - field.Requires icon-text-fit to be "both", or "width", or "height".
+            if (layout?.IconImage != null && 
+                layout?.TextField != null &&
+                (layout?.IconTextFit?.ToLower() == "both" || layout?.IconTextFit?.ToLower() == "width" || layout?.IconTextFit?.ToLower() == "height") &&
+                layout?.IconTextFitPadding != null)
+            {
+                symbolStyler.IconTextFitPadding = new Rect(layout.IconTextFitPadding[0], layout.IconTextFitPadding[1], layout.IconTextFitPadding[2], layout.IconTextFitPadding[3]);
+            }
+
+            // icon-translate
+            //   Optional array. Units in pixels. Defaults to 0, 0. Requires icon-image. Exponential.
+            //   Distance that the icon's anchor is moved from its original placement.
+            //   Positive values indicate right and down, while negative values indicate left and up.
+            if (layout?.IconImage != null && layout?.IconTranslate != null)
+            {
+                // TODO: Is a stopped value
+                symbolStyler.IconTranslate = new Offset(layout.IconTranslate[0], layout.IconTranslate[1]);
+            }
+
+            // icon-translate-anchor
+            //   Optional enum. One of "map", "viewport". Defaults to "map". Requires icon-image. 
+            //   Requires icon-translate. Control whether the translation is relative to the 
+            //   map(north) or viewport(screen).
+            if (layout?.IconImage != null &&
+                layout?.IconTranslate != null &&
+                layout?.IconTranslateAnchor != null)
+            {
+                symbolStyler.IconTranslateAnchor = layout.IconTranslateAnchor.ToMapAlignment();
+            }
+
+            // symbol-avoid-edges
+            //   Optional boolean. Defaults to false. Interval.
+            //   If true, the symbols will not cross tile edges to avoid mutual collisions.
+            //   Recommended in layers that don't have enough padding in the vector tile to prevent 
+            //   collisions, or if it is a point symbol layer placed after a line symbol layer.
+            if (layout?.SymbolAvoidEdges != null)
+            {
+                symbolStyler.SymbolAvoidEdges = layout.SymbolAvoidEdges;
+            }
+
+            // symbol-placement
+            //   Optional enum. One of "point", "line" or "line-center". Defaults to "point". Interval.
+            //   Label placement relative to its geometry. "line" can only be used on 
+            //   LineStrings and Polygons.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-symbol-placement
+            if (layout?.SymbolPlacement != null)
+            {
+                symbolStyler.SymbolPlacement = layout.SymbolPlacement; //.ToPlacement();
+            }
+
+            // symbol-sort-key
+            //   Optional number. Sorts features in ascending order based on this value.
+            //   Features with a higher sort key will appear above features with a lower 
+            //   sort key when they overlap. Features with a lower sort key will have 
+            //   priority over other features when doing placement.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-symbol-sort-key
+            if (layout?.SymbolSortKey != null)
+            {
+                symbolStyler.SymbolSortKey = layout.SymbolSortKey;
+            }
+
+            // symbol-spacing
+            //   Optional number greater than or equal to 1. Units in pixels. 
+            //   Defaults to 250. Requires symbol-placement to be "line"
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-symbol-spacing
+            if (layout?.SymbolPlacement != null && layout?.SymbolSpacing != null)
+            {
+                symbolStyler.SymbolSpacing = layout.SymbolSpacing;
+            }
+
+            // symbol-z-order
+            //   Optional enum. One of "auto", "viewport-y", "source". Defaults to "auto".
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-symbol-z-order
+            if (layout?.SymbolZOrder != null)
+            {
+                symbolStyler.SymbolZOrder = layout.SymbolZOrder.ToZOrder();
+            }
+
+            // text-allow-overlap
+            //   Optional boolean. Defaults to false. Requires text-field. Interval.
+            //   If true, the text will be visible even if it collides with other previously drawn symbols.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-text-allow-overlap
+            if (layout?.TextAllowOverlap != null)
+            {
+                symbolStyler.TextAllowOverlap = layout.TextAllowOverlap;
+            }
+
+            // text-anchor
+            //   Optional enum. One of "center", "left", "right", "top", "bottom", "top-left", "top-right", 
+            //   "bottom-left", "bottom-right". Defaults to "center". Requires text-field. Disabled by 
+            //   text-variable-anchor. 
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-text-anchor
+            if (layout?.TextField != null && layout?.TextVariableAnchor == null && layout?.TextAnchor != null)
+            {
+                symbolStyler.TextAnchor = layout.TextAnchor.ToDirection();
+            }
+
+            // text-color
+            //   Optional color. Defaults to #000000. Requires text-field. Exponential.
+            //   The color with which the text will be drawn.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#paint-symbol-text-color
+            if (layout?.TextField != null && paint?.TextColor != null)
+            {
+                symbolStyler.TextColor = paint.TextColor;
+            }
+
+            // text-field
+            //   Optional string. Interval.
+            //   Value to use for a text label. Feature properties are specified using tokens like {field_name}.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-text-field
+            if (layout?.TextField != null)
+            {
+                symbolStyler.TextField = layout.TextField;
+            }
+
+            // text-font
+            //   Optional array. Defaults to "Open Sans Regular", "Arial Unicode MS Regular". Requires text-field.
+            //   Font stack to use for displaying text.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-text-font
+            if (layout?.TextField != null && layout?.TextFont != null)
+            {
+                var fontName = string.Empty;
+
+                foreach (var font in layout.TextFont)
+                {
+                    // TODO: Check, if font exists
+                    symbolStyler.TextFont.Add(font.ToString());
+                }
+            }
+
+            // text-halo-blur
+            //   Optional number. Units in pixels. Defaults to 0. Requires text-field. Exponential.
+            //   Fade out the halo towards the outside.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#paint-symbol-text-halo-blur
+            if (layout?.TextField != null && layout?.TextHaloBlur != null)
+            {
+                symbolStyler.TextHaloBlur = layout.TextHaloBlur;
+            }
+
+            // text-halo-color
+            //   Optional color. Defaults to rgba(0, 0, 0, 0). Requires text-field. Exponential.
+            //   The color of the text's halo.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#paint-symbol-text-halo-color
+            if (layout?.TextField != null && layout?.TextHaloColor != null)
+            {
+                symbolStyler.TextHaloColor = layout.TextHaloColor;
+            }
+
+            // text-halo-width
+            //   Optional number. Units in pixels. Defaults to 0. Requires text-field. Exponential.
+            //   Distance of halo to the text outline.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#paint-symbol-text-halo-width
+            if (layout?.TextField != null && layout?.TextHaloWidth != null)
+            {
+                symbolStyler.TextHaloWidth = layout.TextHaloWidth;
+            }
+
+            // text-ignore-placement
+            //   Optional boolean. Defaults to false. Requires text-field. Interval.
+            //   If true, other symbols can be visible even if they collide with the text.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-text-ignore-placement
+            if (layout?.TextField != null && layout?.TextIgnorePlacement != null)
+            {
+                symbolStyler.TextIgnorePlacement = layout.TextIgnorePlacement;
+            }
+
+            // text-justify
+            //   Optional enum. One of "auto", "left", "center", "right". Defaults to "center". 
+            //   Requires text-field. Interval. Text justification options.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-text-justify
+            if (layout?.TextField != null && layout?.TextJustify != null)
+            {
+                symbolStyler.TextJustify = layout.TextJustify.ToTextJustify();
+            }
+
+            // text-keep-upright
+            //   Optional boolean. Defaults to true. Requires text-field. Requires text-rotation-alignment = map.
+            //   Requires symbol-placement = line. Interval.
+            //   If true, the text may be flipped vertically to prevent it from being rendered upside-down.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-text-keep-upright
+            if (layout?.TextField != null &&
+                layout?.TextRotationAlignment?.ToLower() == "map" &&
+                //(layout?.SymbolPlacement?.ToLower() == "line" || layout?.SymbolPlacement?.ToLower() == "line-center") &&
+                layout?.TextKeepUpright != null)
+            {
+                symbolStyler.TextKeepUpright = layout.TextKeepUpright;
+            }
+
+            // text-letter-spacing
+            //   Optional number. Units in em. Defaults to 0. Requires text-field. Exponential.
+            //   Text tracking amount.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-text-letter-spacing
+            if (layout?.TextField != null && layout?.TextLetterSpacing != null)
+            {
+                symbolStyler.TextLetterSpacing = layout.TextLetterSpacing;
+            }
+
+            // text-line-height
+            //   Optional number. Units in em. Defaults to 1.2. Requires text-field. Exponential.
+            //   Text leading value for multi-line text.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-text-line-height
+            if (layout?.TextField != null && layout?.TextLineHeight != null)
+            {
+                symbolStyler.TextLineHeight = layout.TextLineHeight;
+            }
+
+            // text-max-angle
+            //   Optional number. Units in degrees. Defaults to 45. Requires text-field. 
+            //   Requires symbol-placement = line. Exponential.
+            //   Maximum angle change between adjacent characters.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-text-max-angle
+            if (layout?.TextField != null &&
+                //(layout?.SymbolPlacement?.ToLower() == "line" || layout?.SymbolPlacement?.ToLower() == "line-center") &&
+                layout?.TextMaxAngle != null)
+            {
+                symbolStyler.TextMaxAngle = layout.TextMaxAngle;
+            }
+
+            // text-max-width
+            //   Optional number. Units in em. Defaults to 10. Requires text-field. Exponential.
+            //   The maximum line width for text wrapping.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-text-max-width
+            if (layout?.TextField != null && layout?.TextMaxWidth != null)
+            {
+                symbolStyler.TextMaxWidth = layout.TextMaxWidth;
+            }
+
+            // text-offset
+            //   Optional array. Units in em. Defaults to 0,0. Requires text-field. Exponential.
+            //   Offset distance of text from its anchor. Positive values indicate right and down, 
+            //   while negative values indicate left and up.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-text-offset
+            if (layout?.TextField != null && layout?.TextOffset != null)
+            {
+                symbolStyler.TextOffset = new Offset(layout.TextOffset[0], layout.TextOffset[1]);
+            }
+
+            // text-opacity
+            //   Optional number. Defaults to 1. Requires text-field. Exponential.
+            //   The opacity at which the text will be drawn.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#paint-symbol-text-opacity
+            if (layout?.TextField != null && paint?.TextOpacity != null)
+            {
+                symbolStyler.TextOpacity = paint.TextOpacity;
+            }
+
+            // text-optional
+            //   Optional boolean. Defaults to false. Requires text-field. Requires icon-image. Interval.
+            //   If true, icons will display without their corresponding text when the text collides with 
+            //   other symbols and the icon does not.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-text-optional
+            if (layout?.TextField != null && layout?.IconImage != null && layout?.TextOptional != null)
+            {
+                symbolStyler.TextOptional = layout.TextOptional;
+            }
+
+            // text-padding
+            //   Optional number. Units in pixels. Defaults to 2. Requires text-field. Exponential.
+            //   Size of the additional area around the text bounding box used for detecting symbol collisions.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-text-padding
+            if (layout?.TextField != null && layout?.TextPadding != null)
+            {
+                symbolStyler.TextPadding = layout.TextPadding;
+            }
+
+            // text-pitch-alignment
+            //   Optional enum. One of "map", "viewport", "auto". Defaults to "auto". Requires text-field. 
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-text-pitch-alignment
+            if (layout?.TextField != null && layout?.TextPitchAlignment != null)
+            {
+                symbolStyler.TextPitchAlignment = layout.TextPitchAlignment.ToMapAlignment();
+            }
+
+            // text-radial-offset
+            //   Optional number. Units in em. Defaults to 0. Requires text-field. Exponential.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-text-radial-offset
+            if (layout?.TextField != null && layout?.TextRadialOffset != null)
+            {
+                symbolStyler.TextRadialOffset = layout.TextRadialOffset;
+            }
+
+            // text-rotate
+            //   Optional number. Units in degrees. Defaults to 0. Requires text-image. Exponential.
+            //   Rotates the text clockwise.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-text-rotate
+            if (layout?.TextField != null && layout?.TextRotate != null)
+            {
+                symbolStyler.TextRotate = layout.TextRotate;
+            }
+
+            // text-rotation-alignment
+            //   Optional enum. One of map, viewport and auto. Defaults to viewport. Requires text-field. Interval.
+            //   Orientation of icon when map is rotated.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-text-rotation-alignment
+            if (layout?.TextField != null && layout?.TextRotationAlignment != null)
+            {
+                symbolStyler.TextRotationAlignment = layout.TextRotationAlignment.ToMapAlignment();
+            }
+
+            // text-size
+            //   Optional number greater than or equal to 0. Units in pixels. Defaults to 16. Requires text-field. 
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-text-size
+            if (layout?.TextField != null && layout?.TextSize != null)
+            {
+                symbolStyler.TextSize = layout.TextSize;
+            }
+
+            // text-transform
+            //   Optional enum. One of none, uppercase, lowercase. Defaults to none. Requires text-field. Interval.
+            //   Specifies how to capitalize text, similar to the CSS text-transform property.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-text-transform
+            if (layout?.TextField != null && layout?.TextTransform != null)
+            {
+                symbolStyler.TextTransform = layout.TextTransform.ToTextTransform();
+            }
+
+            // text-translate
+            //   Optional array. Units in pixels. Defaults to 0, 0. Requires text-field. Exponential.
+            //   Distance that the icon's anchor is moved from its original placement.
+            //   Positive values indicate right and down, while negative values indicate left and up.
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#paint-symbol-text-translate
+            if (layout?.TextField != null && layout?.TextTranslate != null)
+            {
+                // TODO: Is a stopped value
+                symbolStyler.TextTranslate = new Offset(layout.TextTranslate[0], layout.TextTranslate[1]);
+            }
+
+            // text-translate-anchor
+            //   Optional enum. One of "map", "viewport". Defaults to "map". Requires icon-image. 
+            //   Requires text-translate. Control whether the translation is relative to the 
+            //   map (north) or viewport (screen).
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#paint-symbol-text-translate-anchor
+            if (layout?.TextField != null &&
+                layout?.TextTranslate != null &&
+                layout?.TextTranslateAnchor != null)
+            {
+                symbolStyler.TextTranslateAnchor = layout.TextTranslateAnchor.ToMapAlignment();
+            }
+
+            // text-variable-anchor
+            //   Optional array of enums. One of "center", "left", "right", "top", "bottom", 
+            //   "top-left", "top-right", "bottom-left", "bottom-right". Requires text-field. 
+            //   Requires symbol-placement to be "point". 
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-text-variable-anchor
+            if (layout?.TextField != null &&
+                layout?.SymbolPlacement != null &&
+                //layout.SymbolPlacement.ToLower() == "point" &&
+                layout?.TextVariableAnchor != null)
+            {
+                foreach(var alignment in layout?.TextVariableAnchor)
+                    symbolStyler.TextVariableAnchor.Add(alignment.ToMapAlignment());
+            }
+
+            // text-writing-mode
+            //   Optional array of enums. One of "horizontal", "vertical". Requires text-field. 
+            //   Requires symbol-placement to be "point".  
+            //   See https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#layout-symbol-text-writing-mode
+            if (layout?.TextField != null &&
+                layout?.SymbolPlacement != null &&
+                //layout.SymbolPlacement.ToLower() == "point" &&
+                layout?.TextWritingMode != null)
+            {
+                foreach (var orientation in layout?.TextWritingMode)
+                    symbolStyler.TextWritingMode.Add(orientation.ToOrientation());
+            }
+
+            return symbolStyler;
         }
 
         static Regex regExFields = new Regex(@"\{(.*?)\}", (RegexOptions)8);
