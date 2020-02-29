@@ -19,6 +19,8 @@ namespace VectorTiles.MapboxGL
 
         public IEnumerable<IVectorPaint> Paints { get; internal set; } = new List<MGLPaint>();
 
+        public bool IsVisible { get; internal set; } = true;
+
         public MGLStyleLayer()
         {
         }

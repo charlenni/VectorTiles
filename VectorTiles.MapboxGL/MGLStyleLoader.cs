@@ -230,7 +230,7 @@ namespace VectorTiles.MapboxGL
             // If we have a new vector tile provider, than get styles for this
             if (vectorTileSource != null)
             {
-                vectorTileSource.Styles.AddRange(ExtractStyles(vectorTileSource.Name, jsonStyle.StyleLayers, spriteAtlas));
+                vectorTileSource.StyleLayers.AddRange(ExtractStyles(vectorTileSource.Name, jsonStyle.StyleLayers, spriteAtlas));
             }
 
             return vectorTileSource;
@@ -275,60 +275,61 @@ namespace VectorTiles.MapboxGL
             return tileSource;
         }
 
-        private static List<MGLStyleLayer> ExtractStyles(string sourceName, IEnumerable<JsonStyleLayer> styleLayers, MGLSpriteAtlas spriteAtlas)
+        private static List<MGLStyleLayer> ExtractStyles(string sourceName, IEnumerable<JsonStyleLayer> jsonStyleLayers, MGLSpriteAtlas spriteAtlas)
         {
-            var styles = new List<MGLStyleLayer>();
+            var styleLayers = new List<MGLStyleLayer>();
 
-            foreach (var styleLayer in styleLayers)
+            foreach (var jsonStyleLayer in jsonStyleLayers)
             {
                 // styleLayer for background is independent from any source
-                if (styleLayer.Type.ToLower().Equals("background"))
+                if (jsonStyleLayer.Type.ToLower().Equals("background"))
                 {
                     // We handled this already in CreateBackgroundTileSource
                     continue;
                 }
 
-                if (!sourceName.Equals(styleLayer.Source, StringComparison.CurrentCultureIgnoreCase))
+                if (!sourceName.Equals(jsonStyleLayer.Source, StringComparison.CurrentCultureIgnoreCase))
                     continue;
 
                 IFilter filter = new AllFilter(null);
 
                 // Create filters for each style layer
-                if (styleLayer.NativeFilter != null)
-                    filter = FilterConverter.ConvertFilter(styleLayer.NativeFilter);
+                if (jsonStyleLayer.NativeFilter != null)
+                    filter = FilterConverter.ConvertFilter(jsonStyleLayer.NativeFilter);
 
-                MGLStyleLayer style = new MGLStyleLayer
+                MGLStyleLayer styleLayer = new MGLStyleLayer
                 {
-                    Id = styleLayer.Id,
-                    MinZoom = styleLayer.MinZoom ?? 0,
-                    MaxZoom = styleLayer.MaxZoom ?? 30,
+                    Id = jsonStyleLayer.Id,
+                    MinZoom = jsonStyleLayer.MinZoom ?? 0,
+                    MaxZoom = jsonStyleLayer.MaxZoom ?? 30,
                     Filter = filter,
-                    SourceLayer = styleLayer.SourceLayer,
+                    SourceLayer = jsonStyleLayer.SourceLayer,
+                    IsVisible = !(jsonStyleLayer.Layout?.Visibility != null && jsonStyleLayer.Layout.Visibility.Equals("none")),
                 };
 
                 // We have a raster style or one of the vector styles "fill", "line", "symbol", "circle", "heatmap", "fill-extrusion"
-                switch (styleLayer.Type.ToLower())
+                switch (jsonStyleLayer.Type.ToLower())
                 {
                     case "raster":
-                        style.Type = StyleType.Raster;
-                        var rasterPaints = StyleLayerConverter.ConvertRasterLayer(styleLayer);
+                        styleLayer.Type = StyleType.Raster;
+                        var rasterPaints = StyleLayerConverter.ConvertRasterLayer(jsonStyleLayer);
                         if (rasterPaints != null)
-                            ((List<MGLPaint>)style.Paints).AddRange(rasterPaints);
+                            ((List<MGLPaint>)styleLayer.Paints).AddRange(rasterPaints);
                         break;
                     case "fill":
-                        style.Type = StyleType.Fill;
-                        var fillPaints = StyleLayerConverter.ConvertFillLayer(styleLayer, spriteAtlas);
+                        styleLayer.Type = StyleType.Fill;
+                        var fillPaints = StyleLayerConverter.ConvertFillLayer(jsonStyleLayer, spriteAtlas);
                         if (fillPaints != null)
-                            ((List<MGLPaint>)style.Paints).AddRange(fillPaints);
+                            ((List<MGLPaint>)styleLayer.Paints).AddRange(fillPaints);
                         break;
                     case "line":
-                        style.Type = StyleType.Line;
-                        var linePaints = StyleLayerConverter.ConvertLineLayer(styleLayer, spriteAtlas);
+                        styleLayer.Type = StyleType.Line;
+                        var linePaints = StyleLayerConverter.ConvertLineLayer(jsonStyleLayer, spriteAtlas);
                         if (linePaints != null)
-                            ((List<MGLPaint>)style.Paints).AddRange(linePaints);
+                            ((List<MGLPaint>)styleLayer.Paints).AddRange(linePaints);
                         break;
                     case "symbol":
-                        style.Type = StyleType.Symbol;
+                        styleLayer.Type = StyleType.Symbol;
                         break;
                     case "circle":
                         break;
@@ -337,14 +338,14 @@ namespace VectorTiles.MapboxGL
                     case "fill-extrusion":
                         break;
                     default:
-                        throw new ArgumentException($"Unknown layer type ${styleLayer.Type}");
+                        throw new ArgumentException($"Unknown layer type ${jsonStyleLayer.Type}");
                         break;
                 }
 
-                styles.Add(style);
+                styleLayers.Add(styleLayer);
             }
 
-            return styles;
+            return styleLayers;
         }
     }
 }

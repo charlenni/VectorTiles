@@ -1,4 +1,5 @@
 ﻿using SkiaSharp;
+using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using VectorTiles.MapboxGL.Json;
@@ -11,40 +12,34 @@ namespace VectorTiles.MapboxGL.Converter
         /// Convert given context with Mapbox GL styling layer to a Mapsui Style list
         /// </summary>
         /// <param name="context">Context to use while evaluating style</param>
-        /// <param name="styleLayer">Mapbox GL style layer</param>
+        /// <param name="jsonStyleLayer">Mapbox GL style layer</param>
         /// <param name="spriteAtlas">Dictionary with availible sprites</param>
         /// <returns>A list of Mapsui Styles</returns>
-        public static List<MGLPaint> Convert(EvaluationContext context, JsonStyleLayer styleLayer, MGLSpriteAtlas spriteAtlas)
+        public static List<MGLPaint> Convert(EvaluationContext context, JsonStyleLayer jsonStyleLayer, MGLSpriteAtlas spriteAtlas)
         {
-            switch (styleLayer.Type)
+            switch (jsonStyleLayer.Type)
             {
                 case "fill":
-                    return ConvertFillLayer(styleLayer, spriteAtlas);
+                    return ConvertFillLayer(jsonStyleLayer, spriteAtlas);
                 case "line":
-                    return ConvertLineLayer(styleLayer, spriteAtlas);
+                    return ConvertLineLayer(jsonStyleLayer, spriteAtlas);
                 case "symbol":
-                    return ConvertSymbolLayer(styleLayer, spriteAtlas);
+                    return ConvertSymbolLayer(jsonStyleLayer, spriteAtlas);
                 case "circle":
                     return new List<MGLPaint>();
                 case "raster":
                     // Shouldn't get here, because raster are directly handled by ConvertRasterLayer
-                    break;
+                    throw new ArgumentException("Raster style could not be converted");
                 case "background":
-                    return ConvertBackgroundLayer(styleLayer, spriteAtlas);
+                    return ConvertBackgroundLayer(jsonStyleLayer, spriteAtlas);
             }
 
             return new List<MGLPaint>();
         }
 
-        public static List<MGLPaint> ConvertBackgroundLayer(JsonStyleLayer style, MGLSpriteAtlas spriteAtlas)
+        public static List<MGLPaint> ConvertBackgroundLayer(JsonStyleLayer jsonStyleLayer, MGLSpriteAtlas spriteAtlas)
         {
-            // visibility
-            //   Optional enum. One of visible, none. Defaults to visible.
-            //   The display of this layer. none hides this layer.
-            if (style.Layout?.Visibility != null && style.Layout.Visibility.Equals("none"))
-                return null;
-
-            var paint = style.Paint;
+            var paint = jsonStyleLayer.Paint;
 
             var brush = new MGLPaint();
 
@@ -120,15 +115,9 @@ namespace VectorTiles.MapboxGL.Converter
             return new List<MGLPaint> { brush };
         }
 
-        public static List<MGLPaint> ConvertRasterLayer(JsonStyleLayer style)
+        public static List<MGLPaint> ConvertRasterLayer(JsonStyleLayer jsonStyleLayer)
         {
-            // visibility
-            //   Optional enum. One of visible, none. Defaults to visible.
-            //   The display of this layer. none hides this layer.
-            if (style.Layout?.Visibility != null && style.Layout.Visibility.Equals("none"))
-                return null;
-
-            var paint = style.Paint;
+            var paint = jsonStyleLayer.Paint;
 
             var brush = new MGLPaint();
 
@@ -176,18 +165,10 @@ namespace VectorTiles.MapboxGL.Converter
             return new List<MGLPaint>() { brush };
         }
 
-        public static List<MGLPaint> ConvertFillLayer(JsonStyleLayer layer, MGLSpriteAtlas spriteAtlas)
+        public static List<MGLPaint> ConvertFillLayer(JsonStyleLayer jsonStyleLayer, MGLSpriteAtlas spriteAtlas)
         {
-            var layout = layer?.Layout;
-            var paint = layer?.Paint;
-
-            // visibility
-            //   Optional enum. One of visible, none. Defaults to visible.
-            //   The display of this layer. none hides this layer.
-            if (layout?.Visibility != null && layout.Visibility.Equals("none"))
-            {
-                return null;
-            }
+            var layout = jsonStyleLayer?.Layout;
+            var paint = jsonStyleLayer?.Paint;
 
             var area = new MGLPaint();
             var line = new MGLPaint();
@@ -216,13 +197,13 @@ namespace VectorTiles.MapboxGL.Converter
             {
                 if (paint.FillColor.Stops != null)
                 {
-                    area.SetVariableColor((context) => layer.Paint.FillColor.Evaluate(context.Zoom));
-                    line.SetVariableColor((context) => layer.Paint.FillColor.Evaluate(context.Zoom));
+                    area.SetVariableColor((context) => jsonStyleLayer.Paint.FillColor.Evaluate(context.Zoom));
+                    line.SetVariableColor((context) => jsonStyleLayer.Paint.FillColor.Evaluate(context.Zoom));
                 }
                 else
                 {
-                    area.SetFixColor(layer.Paint.FillColor.SingleVal);
-                    line.SetFixColor(layer.Paint.FillColor.SingleVal);
+                    area.SetFixColor(jsonStyleLayer.Paint.FillColor.SingleVal);
+                    line.SetFixColor(jsonStyleLayer.Paint.FillColor.SingleVal);
                 }
             }
 
@@ -233,11 +214,11 @@ namespace VectorTiles.MapboxGL.Converter
             {
                 if (paint.FillOutlineColor.Stops != null)
                 {
-                    line.SetVariableColor((context) => layer.Paint.FillOutlineColor.Evaluate(context.Zoom));
+                    line.SetVariableColor((context) => jsonStyleLayer.Paint.FillOutlineColor.Evaluate(context.Zoom));
                 }
                 else
                 {
-                    line.SetFixColor(layer.Paint.FillOutlineColor.SingleVal);
+                    line.SetFixColor(jsonStyleLayer.Paint.FillOutlineColor.SingleVal);
                 }
             }
 
@@ -249,13 +230,13 @@ namespace VectorTiles.MapboxGL.Converter
             {
                 if (paint.FillOpacity.Stops != null)
                 {
-                    area.SetVariableOpacity((context) => layer.Paint.FillOpacity.Evaluate(context.Zoom));
-                    line.SetVariableOpacity((context) => layer.Paint.FillOpacity.Evaluate(context.Zoom));
+                    area.SetVariableOpacity((context) => jsonStyleLayer.Paint.FillOpacity.Evaluate(context.Zoom));
+                    line.SetVariableOpacity((context) => jsonStyleLayer.Paint.FillOpacity.Evaluate(context.Zoom));
                 }
                 else
                 {
-                    area.SetFixOpacity(layer.Paint.FillOpacity.SingleVal);
-                    line.SetFixOpacity(layer.Paint.FillOpacity.SingleVal);
+                    area.SetFixOpacity(jsonStyleLayer.Paint.FillOpacity.SingleVal);
+                    line.SetFixOpacity(jsonStyleLayer.Paint.FillOpacity.SingleVal);
                 }
             }
 
@@ -266,13 +247,13 @@ namespace VectorTiles.MapboxGL.Converter
             {
                 if (paint.FillAntialias.Stops != null)
                 {
-                    area.SetVariableAntialias((context) => layer.Paint.FillAntialias.Evaluate(context.Zoom));
-                    line.SetVariableAntialias((context) => layer.Paint.FillAntialias.Evaluate(context.Zoom));
+                    area.SetVariableAntialias((context) => jsonStyleLayer.Paint.FillAntialias.Evaluate(context.Zoom));
+                    line.SetVariableAntialias((context) => jsonStyleLayer.Paint.FillAntialias.Evaluate(context.Zoom));
                 }
                 else
                 {
-                    area.SetFixAntialias(layer.Paint.FillAntialias.SingleVal == null ? false : (bool)layer.Paint.FillAntialias.SingleVal);
-                    line.SetFixAntialias(layer.Paint.FillAntialias.SingleVal == null ? false : (bool)layer.Paint.FillAntialias.SingleVal);
+                    area.SetFixAntialias(jsonStyleLayer.Paint.FillAntialias.SingleVal == null ? false : (bool)jsonStyleLayer.Paint.FillAntialias.SingleVal);
+                    line.SetFixAntialias(jsonStyleLayer.Paint.FillAntialias.SingleVal == null ? false : (bool)jsonStyleLayer.Paint.FillAntialias.SingleVal);
                 }
             }
 
@@ -318,7 +299,7 @@ namespace VectorTiles.MapboxGL.Converter
                 {
                     area.SetVariableShader((context) =>
                     {
-                        var name = ReplaceFields(layer.Paint.FillPattern.Evaluate(context.Zoom), context.Tags);
+                        var name = ReplaceFields(jsonStyleLayer.Paint.FillPattern.Evaluate(context.Zoom), context.Tags);
 
                         var sprite = spriteAtlas.GetSprite(name);
                         if (sprite != null && sprite.Image != null)
@@ -339,18 +320,10 @@ namespace VectorTiles.MapboxGL.Converter
             return new List<MGLPaint>() { area, line };
         }
 
-        public static List<MGLPaint> ConvertLineLayer(JsonStyleLayer layer, MGLSpriteAtlas spriteAtlas)
+        public static List<MGLPaint> ConvertLineLayer(JsonStyleLayer jsonStyleLayer, MGLSpriteAtlas spriteAtlas)
         {
-            var layout = layer?.Layout;
-            var paint = layer?.Paint;
-
-            // visibility
-            //   Optional enum. One of visible, none. Defaults to visible.
-            //   The display of this layer. none hides this layer.
-            if (layout?.Visibility != null && layout.Visibility.Equals("none"))
-            {
-                return null;
-            }
+            var layout = jsonStyleLayer?.Layout;
+            var paint = jsonStyleLayer?.Paint;
 
             var line = new MGLPaint();
 
@@ -458,11 +431,11 @@ namespace VectorTiles.MapboxGL.Converter
             {
                 if (paint.LineColor.Stops != null)
                 {
-                    line.SetVariableColor((context) => layer.Paint.LineColor.Evaluate(context.Zoom));
+                    line.SetVariableColor((context) => jsonStyleLayer.Paint.LineColor.Evaluate(context.Zoom));
                 }
                 else
                 {
-                    line.SetFixColor(layer.Paint.LineColor.SingleVal);
+                    line.SetFixColor(jsonStyleLayer.Paint.LineColor.SingleVal);
                 }
             }
 
@@ -473,11 +446,11 @@ namespace VectorTiles.MapboxGL.Converter
             {
                 if (paint.LineWidth.Stops != null)
                 {
-                    line.SetVariableStrokeWidth((context) => layer.Paint.LineWidth.Evaluate(context.Zoom));
+                    line.SetVariableStrokeWidth((context) => jsonStyleLayer.Paint.LineWidth.Evaluate(context.Zoom));
                 }
                 else
                 {
-                    line.SetFixStrokeWidth(layer.Paint.LineWidth.SingleVal);
+                    line.SetFixStrokeWidth(jsonStyleLayer.Paint.LineWidth.SingleVal);
                 }
             }
 
@@ -488,11 +461,11 @@ namespace VectorTiles.MapboxGL.Converter
             {
                 if (paint.LineOpacity.Stops != null)
                 {
-                    line.SetVariableOpacity((context) => layer.Paint.LineOpacity.Evaluate(context.Zoom));
+                    line.SetVariableOpacity((context) => jsonStyleLayer.Paint.LineOpacity.Evaluate(context.Zoom));
                 }
                 else
                 {
-                    line.SetFixOpacity(layer.Paint.LineOpacity.SingleVal);
+                    line.SetFixOpacity(jsonStyleLayer.Paint.LineOpacity.SingleVal);
                 }
             }
 
@@ -505,11 +478,11 @@ namespace VectorTiles.MapboxGL.Converter
             {
                 if (paint.LineDashArray.Stops != null)
                 {
-                    line.SetVariableDashArray((context) => layer.Paint.LineDashArray.Evaluate(context.Zoom));
+                    line.SetVariableDashArray((context) => jsonStyleLayer.Paint.LineDashArray.Evaluate(context.Zoom));
                 }
                 else
                 {
-                    line.SetFixDashArray(layer.Paint.LineDashArray.SingleVal);
+                    line.SetFixDashArray(jsonStyleLayer.Paint.LineDashArray.SingleVal);
                 }
             }
 
@@ -553,7 +526,7 @@ namespace VectorTiles.MapboxGL.Converter
             return new List<MGLPaint>() { line };
         }
 
-        public static List<MGLPaint> ConvertSymbolLayer(JsonStyleLayer styleLayer, MGLSpriteAtlas spriteAtlas)
+        public static List<MGLPaint> ConvertSymbolLayer(JsonStyleLayer jsonStyleLayer, MGLSpriteAtlas spriteAtlas)
         {
             string styleLabelText = string.Empty;
             List<MGLPaint> result = new List<MGLPaint>();
@@ -562,13 +535,6 @@ namespace VectorTiles.MapboxGL.Converter
                 styleLabelText = "";
 
             //return result;
-
-
-            // visibility
-            //   Optional enum. One of visible, none. Defaults to visible.
-            //   The display of this layer. none hides this layer.
-            if (styleLayer.Layout?.Visibility != null && styleLayer.Layout.Visibility.Equals("none"))
-                return result;
 
             var paint = styleLayer.Paint;
             var layout = styleLayer.Layout;

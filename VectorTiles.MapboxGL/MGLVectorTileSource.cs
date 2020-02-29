@@ -25,7 +25,7 @@ namespace VectorTiles.MapboxGL
         /// </summary>
         public ITileSource Source { get; }
 
-        public List<IVectorStyleLayer> Styles { get; } = new List<IVectorStyleLayer>();
+        public List<IVectorStyleLayer> StyleLayers { get; } = new List<IVectorStyleLayer>();
 
         public ITileSchema Schema => Source.Schema;
 
@@ -76,10 +76,10 @@ namespace VectorTiles.MapboxGL
             var drawingRect = new SKRect(0, 0, TileSize, TileSize);
 
             // Now convert this features into drawables or add symbols and labels into buckets
-            foreach (var style in Styles)
+            foreach (var styleLayer in StyleLayers)
             {
                 // Is this style relevant or is it outside the zoom range
-                if (style.MinZoom > zoom || style.MaxZoom < zoom)
+                if (!styleLayer.IsVisible || styleLayer.MinZoom > zoom || styleLayer.MaxZoom < zoom)
                     continue;
 
                 SKPath path = new SKPath() { FillType = SKPathFillType.Winding };
@@ -88,27 +88,27 @@ namespace VectorTiles.MapboxGL
                 // Check all features
                 foreach (var feature in features)
                 {
-                    // Is this feature on the actuell style layer?
-                    if (style.SourceLayer != feature.Layer)
+                    // Is this style layer relevant for this feature?
+                    if (styleLayer.SourceLayer != feature.Layer)
                         continue;
 
                     // Fullfill feature the filter for this style layer
-                    if (!style.Filter.Evaluate(feature))
+                    if (!styleLayer.Filter.Evaluate(feature))
                         continue;
 
                     // Check for different types
-                    switch (style.Type)
+                    switch (styleLayer.Type)
                     {
                         case StyleType.Symbol:
                             // Feature is a symbol
-                            var symbol = CreateSymbol(feature, style);
+                            var symbol = CreateSymbol(feature, styleLayer);
                             if (symbol != null)
                                 symbols.Add(symbol);
                             break;
                         case StyleType.Line:
                         case StyleType.Fill:
                             // Feature is a line or fill
-                            CreatePath(path, feature, style);
+                            CreatePath(path, feature, styleLayer);
                             break;
                         default:
                             throw new Exception("Unknown style type");
@@ -122,7 +122,7 @@ namespace VectorTiles.MapboxGL
                     if (!path.Bounds.IntersectsWith(drawingRect))
                         continue;
 
-                    foreach (var paint in style.Paints)
+                    foreach (var paint in styleLayer.Paints)
                         result.PathPaintBucket.Add(new PathPaintPair(path, paint));
                 }
 
