@@ -115,7 +115,7 @@ namespace Factory
                 {
                     stopwatch.Start();
 
-                    var (vectorDrawable, symbols) = source.GetDrawable(tile);
+                    var vectorDrawable = source.GetDrawable(tile);
 
                     stopwatch.Stop();
                     stopwatchResults.Add($"Ellapsed time for GetDrawable of ${source.Name}: {stopwatch.ElapsedMilliseconds} ms");

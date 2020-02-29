@@ -32,7 +32,7 @@ namespace VectorTiles
         /// Bucket for symbols
         /// </summary>
         // TODO
-        //List<Symbol> SymbolBucket { get; } = new List<Symbol>();
+        public List<List<ISymbol>> SymbolBucket { get; } = new List<List<ISymbol>>();
 
         /// <summary>
         /// Bucket holding all path texts

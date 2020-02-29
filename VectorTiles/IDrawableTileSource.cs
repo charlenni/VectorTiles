@@ -21,6 +21,6 @@ namespace VectorTiles
         /// </summary>
         /// <param name="tileInfo">Tile to use</param>
         /// <returns>SKDrawable for given tile and a list of symbols</returns>
-        (Drawable, List<object>) GetDrawable(TileInfo tileInfo);
+        Drawable GetDrawable(TileInfo tileInfo);
     }
 }

@@ -28,9 +28,9 @@ namespace VectorTiles.MapboxGL
         /// </summary>
         public MGLPaint BackgroundPaint { get; internal set; }
 
-        public (Drawable, List<object>) GetDrawable(TileInfo tileInfo)
+        public Drawable GetDrawable(TileInfo tileInfo)
         {
-            return (this, null);
+            return this;
         }
 
         public byte[] GetTile(TileInfo tileInfo)

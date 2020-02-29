@@ -3,8 +3,10 @@ using VectorTiles.Filter;
 
 namespace VectorTiles.MapboxGL
 {
-    public class MGLStyle : IVectorStyle
+    public class MGLStyleLayer : IVectorStyleLayer
     {
+        public string Id { get; internal set; }
+
         public float MinZoom { get; internal set; }
 
         public float MaxZoom { get; internal set; }
@@ -17,7 +19,7 @@ namespace VectorTiles.MapboxGL
 
         public IEnumerable<IVectorPaint> Paints { get; internal set; } = new List<MGLPaint>();
 
-        public MGLStyle()
+        public MGLStyleLayer()
         {
         }
     }

@@ -163,7 +163,7 @@ namespace VectorTiles.MapboxGL
             if (rasterSource != null)
             {
                 // Add all ThemeStyles for this layer
-                var style = ExtractStyles(rasterSource.Name, jsonStyle.StyleLayers, spriteAtlas).FirstOrDefault<IVectorStyle>();
+                var style = ExtractStyles(rasterSource.Name, jsonStyle.StyleLayers, spriteAtlas).FirstOrDefault<IVectorStyleLayer>();
                 if (style != null)
                 {
                     // Replace color with white for opacity
@@ -275,14 +275,14 @@ namespace VectorTiles.MapboxGL
             return tileSource;
         }
 
-        private static List<MGLStyle> ExtractStyles(string sourceName, IEnumerable<StyleLayer> styleLayers, MGLSpriteAtlas spriteAtlas)
+        private static List<MGLStyleLayer> ExtractStyles(string sourceName, IEnumerable<StyleLayer> styleLayers, MGLSpriteAtlas spriteAtlas)
         {
-            var styles = new List<MGLStyle>();
+            var styles = new List<MGLStyleLayer>();
 
             foreach (var styleLayer in styleLayers)
             {
                 // styleLayer for background is independent from any source
-                if (styleLayer.Type.ToLower().Equals("background") && styleLayer.Paint.BackgroundColor != null)
+                if (styleLayer.Type.ToLower().Equals("background"))
                 {
                     // We handled this already in CreateBackgroundTileSource
                     continue;
@@ -297,8 +297,9 @@ namespace VectorTiles.MapboxGL
                 if (styleLayer.NativeFilter != null)
                     filter = FilterConverter.ConvertFilter(styleLayer.NativeFilter);
 
-                MGLStyle style = new MGLStyle
+                MGLStyleLayer style = new MGLStyleLayer
                 {
+                    Id = styleLayer.Id,
                     MinZoom = styleLayer.MinZoom ?? 0,
                     MaxZoom = styleLayer.MaxZoom ?? 30,
                     Filter = filter,
@@ -327,12 +328,16 @@ namespace VectorTiles.MapboxGL
                             ((List<MGLPaint>)style.Paints).AddRange(linePaints);
                         break;
                     case "symbol":
+                        style.Type = StyleType.Symbol;
                         break;
                     case "circle":
                         break;
                     case "heatmap":
                         break;
                     case "fill-extrusion":
+                        break;
+                    default:
+                        throw new ArgumentException($"Unknown layer type ${styleLayer.Type}");
                         break;
                 }
 

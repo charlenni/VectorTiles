@@ -25,7 +25,7 @@ namespace VectorTiles.MapboxGL
         /// </summary>
         public ITileSource Source { get; }
 
-        public List<IVectorStyle> Styles { get; } = new List<IVectorStyle>();
+        public List<IVectorStyleLayer> Styles { get; } = new List<IVectorStyleLayer>();
 
         public ITileSchema Schema => Source.Schema;
 
@@ -42,7 +42,7 @@ namespace VectorTiles.MapboxGL
         /// </summary>
         /// <param name="tileInfo">Info of tile to draw</param>
         /// <returns>Drawable VectorTile and List of symbols</returns>
-        public (Drawable, List<object>) GetDrawable(TileInfo ti)
+        public Drawable GetDrawable(TileInfo ti)
         {
             // Check Schema for TileInfo
             var tileInfo = Schema.YAxis == YAxis.OSM ? ti.ToTMS() : ti;
@@ -57,7 +57,7 @@ namespace VectorTiles.MapboxGL
 
             if (tileData == null)
                 // We don't find any data for this tile, even if we check lower zoom levels
-                return (null, null);
+                return null;
 
             // For calculation of feature coordinates:
             // Coordinates between 0 and 4096. This is now multiplacated with the overzoom factor.
@@ -67,7 +67,7 @@ namespace VectorTiles.MapboxGL
             var features = GetFeatures(tileInfo, tileData, overzoom, TileSize / tileSizeOfMGLVectorData);
 
             if (features.Count == 0)
-                return (null, null);
+                return null;
 
             var result = new VectorTile(TileSize, (int)Math.Log(overzoom.Scale, 2));
 
@@ -78,84 +78,40 @@ namespace VectorTiles.MapboxGL
             // Now convert this features into drawables or add symbols and labels into buckets
             foreach (var style in Styles)
             {
+                // Is this style relevant or is it outside the zoom range
                 if (style.MinZoom > zoom || style.MaxZoom < zoom)
                     continue;
 
                 SKPath path = new SKPath() { FillType = SKPathFillType.Winding };
+                List<ISymbol> symbols = new List<ISymbol>();
 
+                // Check all features
                 foreach (var feature in features)
                 {
+                    // Is this feature on the actuell style layer?
                     if (style.SourceLayer != feature.Layer)
                         continue;
 
-                    if (style.Type != StyleType.Line && style.Type != StyleType.Fill)
-                        continue;
-
+                    // Fullfill feature the filter for this style layer
                     if (!style.Filter.Evaluate(feature))
                         continue;
 
-                    // Style is for this Feature relevant
-                    switch (feature.Type)
+                    // Check for different types
+                    switch (style.Type)
                     {
-                        case GeometryType.Point:
-                            //throw new NotImplementedException();
+                        case StyleType.Symbol:
+                            // Feature is a symbol
+                            var symbol = CreateSymbol(feature, style);
+                            if (symbol != null)
+                                symbols.Add(symbol);
                             break;
-                        case GeometryType.LineString:
-                            path.MoveTo((float)feature.Geometry.Coordinates[0].X, (float)feature.Geometry.Coordinates[0].Y);
-                            for (var pos = 1; pos < feature.Geometry.Coordinates.Length; pos++)
-                            {
-                                path.LineTo((float)feature.Geometry.Coordinates[pos].X, (float)feature.Geometry.Coordinates[pos].Y);
-                            }
+                        case StyleType.Line:
+                        case StyleType.Fill:
+                            // Feature is a line or fill
+                            CreatePath(path, feature, style);
                             break;
-                        case GeometryType.MultiLineString:
-                            for (var n = 0; n < feature.Geometry.NumGeometries; n++)
-                            {
-                                path.MoveTo((float)feature.Geometry.GetGeometryN(n).Coordinates[0].X, (float)feature.Geometry.GetGeometryN(n).Coordinates[0].Y);
-                                for (var pos = 1; pos < feature.Geometry.GetGeometryN(n).Coordinates.Length; pos++)
-                                {
-                                    path.LineTo((float)feature.Geometry.GetGeometryN(n).Coordinates[pos].X, (float)feature.Geometry.GetGeometryN(n).Coordinates[pos].Y);
-                                }
-                            }
-                            break;
-                        case GeometryType.Polygon:
-                            geometry = (Polygon)feature.Geometry;
-                            path.MoveTo((float)geometry.Coordinates[0].X, (float)geometry.Coordinates[0].Y);
-                            for (var pos = 1; pos < geometry.Coordinates.Length; pos++)
-                            {
-                                path.LineTo((float)geometry.Coordinates[pos].X, (float)geometry.Coordinates[pos].Y);
-                            }
-                            path.Close();
-                            for (var hole = 0; hole < geometry.Holes.Length; hole++)
-                            {
-                                path.MoveTo((float)geometry.Holes[hole].Coordinates[0].X, (float)geometry.Holes[hole].Coordinates[0].Y);
-                                for (var pos = 1; pos < geometry.Holes[hole].Coordinates.Length; pos++)
-                                {
-                                    path.LineTo((float)geometry.Holes[hole].Coordinates[pos].X, (float)geometry.Holes[hole].Coordinates[pos].Y);
-                                }
-                                path.Close();
-                            }
-                            break;
-                        case GeometryType.MultiPolygon:
-                            for (var n = 0; n < feature.Geometry.NumGeometries; n++)
-                            {
-                                geometry = (Polygon)feature.Geometry.GetGeometryN(n);
-                                path.MoveTo((float)geometry.ExteriorRing.Coordinates[0].X, (float)geometry.ExteriorRing.Coordinates[0].Y);
-                                for (var pos = 1; pos < geometry.ExteriorRing.Coordinates.Length; pos++)
-                                {
-                                    path.LineTo((float)geometry.ExteriorRing.Coordinates[pos].X, (float)geometry.ExteriorRing.Coordinates[pos].Y);
-                                }
-                                path.Close();
-                                for (var hole = 0; hole < geometry.Holes.Length; hole++)
-                                {
-                                    path.MoveTo((float)geometry.Holes[hole].Coordinates[0].X, (float)geometry.Holes[hole].Coordinates[0].Y);
-                                    for (var pos = 1; pos < geometry.Holes[hole].Coordinates.Length; pos++)
-                                    {
-                                        path.LineTo((float)geometry.Holes[hole].Coordinates[pos].X, (float)geometry.Holes[hole].Coordinates[pos].Y);
-                                    }
-                                    path.Close();
-                                }
-                            }
-                            break;
+                        default:
+                            throw new Exception("Unknown style type");
                     }
                 }
 
@@ -169,9 +125,116 @@ namespace VectorTiles.MapboxGL
                     foreach (var paint in style.Paints)
                         result.PathPaintBucket.Add(new PathPaintPair(path, paint));
                 }
+
+                if (symbols.Count > 0)
+                {
+                    result.SymbolBucket.Add(symbols);
+                }
             }
 
-            return (result, null);
+            return result;
+        }
+
+        public MGLSymbol CreateSymbol(VectorTileFeature feature, IVectorStyleLayer style)
+        {
+            MGLSymbol symbol = null;
+
+            switch (feature.Type)
+            {
+                case GeometryType.Point:
+                    if (feature.Geometry.Coordinates[0].X < 0 || feature.Geometry.Coordinates[0].X > TileSize
+                        || feature.Geometry.Coordinates[0].Y < 0 || feature.Geometry.Coordinates[0].Y > TileSize)
+                        return null;
+                    symbol = new MGLSymbol(feature, style);
+                    break;
+                case GeometryType.LineString:
+                    break;
+                default:
+                    System.Diagnostics.Debug.WriteLine($"There are other geometries: ${feature.Type.ToString()}");
+                    break;
+            }
+
+            // Create correct name
+
+            return symbol;
+        }
+
+        /// <summary>
+        /// Create path for feature
+        /// </summary>
+        /// <param name="path">SKPath to which this path should be added</param>
+        /// <param name="feature">Feature to add</param>
+        /// <param name="style">Style to use</param>
+        private void CreatePath(SKPath path, VectorTileFeature feature, IVectorStyleLayer style)
+        {
+            switch (feature.Type)
+            {
+                case GeometryType.Point:
+                    if (style.Type == StyleType.Line || style.Type == StyleType.Fill)
+                    {
+                        // This are things like height of a building
+                        // We don't use this up to now
+                        System.Diagnostics.Debug.WriteLine(feature.Tags.ToString());
+                        return;
+                    }
+                    break;
+                case GeometryType.LineString:
+                    path.MoveTo((float)feature.Geometry.Coordinates[0].X, (float)feature.Geometry.Coordinates[0].Y);
+                    for (var pos = 1; pos < feature.Geometry.Coordinates.Length; pos++)
+                    {
+                        path.LineTo((float)feature.Geometry.Coordinates[pos].X, (float)feature.Geometry.Coordinates[pos].Y);
+                    }
+                    break;
+                case GeometryType.MultiLineString:
+                    for (var n = 0; n < feature.Geometry.NumGeometries; n++)
+                    {
+                        path.MoveTo((float)feature.Geometry.GetGeometryN(n).Coordinates[0].X, (float)feature.Geometry.GetGeometryN(n).Coordinates[0].Y);
+                        for (var pos = 1; pos < feature.Geometry.GetGeometryN(n).Coordinates.Length; pos++)
+                        {
+                            path.LineTo((float)feature.Geometry.GetGeometryN(n).Coordinates[pos].X, (float)feature.Geometry.GetGeometryN(n).Coordinates[pos].Y);
+                        }
+                    }
+                    break;
+                case GeometryType.Polygon:
+                    var polygon = (Polygon)feature.Geometry;
+                    path.MoveTo((float)polygon.Coordinates[0].X, (float)polygon.Coordinates[0].Y);
+                    for (var pos = 1; pos < polygon.Coordinates.Length; pos++)
+                    {
+                        path.LineTo((float)polygon.Coordinates[pos].X, (float)polygon.Coordinates[pos].Y);
+                    }
+                    path.Close();
+                    for (var hole = 0; hole < polygon.Holes.Length; hole++)
+                    {
+                        path.MoveTo((float)polygon.Holes[hole].Coordinates[0].X, (float)polygon.Holes[hole].Coordinates[0].Y);
+                        for (var pos = 1; pos < polygon.Holes[hole].Coordinates.Length; pos++)
+                        {
+                            path.LineTo((float)polygon.Holes[hole].Coordinates[pos].X, (float)polygon.Holes[hole].Coordinates[pos].Y);
+                        }
+                        path.Close();
+                    }
+                    break;
+                case GeometryType.MultiPolygon:
+                    for (var n = 0; n < feature.Geometry.NumGeometries; n++)
+                    {
+                        var geometry = (Polygon)feature.Geometry.GetGeometryN(n);
+                        path.MoveTo((float)geometry.ExteriorRing.Coordinates[0].X, (float)geometry.ExteriorRing.Coordinates[0].Y);
+                        for (var pos = 1; pos < geometry.ExteriorRing.Coordinates.Length; pos++)
+                        {
+                            path.LineTo((float)geometry.ExteriorRing.Coordinates[pos].X, (float)geometry.ExteriorRing.Coordinates[pos].Y);
+                        }
+                        path.Close();
+                        for (var hole = 0; hole < geometry.Holes.Length; hole++)
+                        {
+                            path.MoveTo((float)geometry.Holes[hole].Coordinates[0].X, (float)geometry.Holes[hole].Coordinates[0].Y);
+                            for (var pos = 1; pos < geometry.Holes[hole].Coordinates.Length; pos++)
+                            {
+                                path.LineTo((float)geometry.Holes[hole].Coordinates[pos].X, (float)geometry.Holes[hole].Coordinates[pos].Y);
+                            }
+                            path.Close();
+                        }
+                    }
+                    break;
+            }
         }
 
         /// <summary>
@@ -189,7 +252,11 @@ namespace VectorTiles.MapboxGL
             var offsetX = 0f;
             var offsetY = 0f;  //(Source.Schema.YAxis == YAxis.TMS ? -4096f : 0f);
             var offsetFactor = 4096;
-            
+
+            // Check MinZoom of source. MaxZoom isn't checked, because of overzoom
+            if (zoom < 0)
+                return (null, Overzoom.None);
+
             // Get byte data for this tile
             var tileData = Source.GetTile(tileInfo);
 
@@ -212,6 +279,9 @@ namespace VectorTiles.MapboxGL
                 info.Index = new TileIndex(col, row, zoom.ToString());
                 tileData = Source.GetTile(info);
             }
+
+            if (zoom < 0)
+                return (null, Overzoom.None);
 
             offsetY = offsetFactor - offsetY + (Source.Schema.YAxis == YAxis.TMS ? -4096f : 0f);
 

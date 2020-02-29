@@ -25,7 +25,7 @@ namespace VectorTiles.MapboxGL
         /// <summary>
         /// Style to use for drawing images
         /// </summary>
-        public IVectorStyle Style { get; set; }
+        public IVectorStyleLayer Style { get; set; }
 
         public ITileSchema Schema => Source.Schema;
 
@@ -37,7 +37,7 @@ namespace VectorTiles.MapboxGL
             Source = source;
         }
 
-        (Drawable, List<object>) IDrawableTileSource.GetDrawable(TileInfo ti)
+        Drawable IDrawableTileSource.GetDrawable(TileInfo ti)
         {
             // Check Schema for TileInfo
             var tileInfo = Schema.YAxis == YAxis.OSM ? ti.ToTMS() : ti;
@@ -49,11 +49,11 @@ namespace VectorTiles.MapboxGL
 
                 var result = new RasterTile(TileSize, image, Style.Paints.FirstOrDefault<IVectorPaint>());
 
-                return (result, null);
+                return result;
             }
             catch (Exception e)
             {
-                return (null, null);
+                return null;
             }
         }
 

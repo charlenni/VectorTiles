@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace VectorTiles
 {
-    public interface IVectorStyle
+    public interface IVectorStyleLayer
     {
         /// <summary>
         /// Minimal zoom from which this style is used
