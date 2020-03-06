@@ -576,7 +576,7 @@ namespace VectorTiles.MapboxGL.Converter
             if (layout?.IconImage != null)
             {
                 // TODO: Get the right list (see https://docs.mapbox.com/mapbox-gl-js/style-spec/types/#resolvedimage)
-                symbolStyler.IconImage = layout.IconImage;
+//                symbolStyler.IconImage = layout.IconImage;
             }
 
             // icon-keep-upright

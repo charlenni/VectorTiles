@@ -109,7 +109,8 @@ namespace VectorTiles.MapboxGL
                             CreatePath(path, feature, styleLayer);
                             break;
                         default:
-                            throw new Exception("Unknown style type");
+                            // throw new Exception("Unknown style type");
+                            break;
                     }
                 }
 

@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 namespace VectorTiles.MapboxGL.Converter
 {
     /// <summary>
-    /// Create filters from given filter array in Mapbpx GL style layer
+    /// Create filters from given filter array in Mapbox GL style layer
     /// </summary>
     public static class FilterConverter
     {
