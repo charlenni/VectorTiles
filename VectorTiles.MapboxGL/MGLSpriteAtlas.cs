@@ -147,16 +147,16 @@ namespace VectorTiles.MapboxGL
             Stream streamAtlas = null;
 
             var assembly = Assembly.GetEntryAssembly();
-            var resourceNames = assembly.GetManifestResourceNames();
+            var resourceNames = assembly?.GetManifestResourceNames();
 
-            var resourceName = resourceNames.FirstOrDefault(s => s.EndsWith(nameJson, StringComparison.CurrentCultureIgnoreCase));
+            var resourceName = resourceNames?.FirstOrDefault(s => s.EndsWith(nameJson, StringComparison.CurrentCultureIgnoreCase));
 
             if (!string.IsNullOrEmpty(resourceName))
             {
                 streamJson = assembly.GetManifestResourceStream(resourceName);
             }
 
-            resourceName = resourceNames.FirstOrDefault(s => s.EndsWith(nameAtlas, StringComparison.CurrentCultureIgnoreCase));
+            resourceName = resourceNames?.FirstOrDefault(s => s.EndsWith(nameAtlas, StringComparison.CurrentCultureIgnoreCase));
 
             if (!string.IsNullOrEmpty(resourceName))
             {
