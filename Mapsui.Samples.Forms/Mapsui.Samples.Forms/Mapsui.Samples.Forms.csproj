@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Styles\osm-liberty.json" />
+    <None Remove="Styles\sprites\osm-liberty.json" />
+    <None Remove="Styles\sprites\osm-liberty.png" />
+    <None Remove="Styles\sprites\osm-liberty@2x.json" />
+    <None Remove="Styles\sprites\osm-liberty@2x.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Styles\osm-liberty.json" />
+    <EmbeddedResource Include="Styles\sprites\osm-liberty.json" />
+    <EmbeddedResource Include="Styles\sprites\osm-liberty.png" />
+    <EmbeddedResource Include="Styles\sprites\osm-liberty@2x.json" />
+    <EmbeddedResource Include="Styles\sprites\osm-liberty@2x.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mapsui" Version="2.0.0-beta.37" />
+    <PackageReference Include="Mapsui.Forms" Version="2.0.0-beta.37" />
+    <PackageReference Include="SkiaSharp" Version="1.68.2-preview.17" />
+    <PackageReference Include="Xamarin.Forms" Version="4.3.0.908675" />
+    <PackageReference Include="Xamarin.Essentials" Version="1.3.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\VectorTiles.MapboxGL\VectorTiles.MapboxGL.csproj" />
+    <ProjectReference Include="..\..\VectorTiles\VectorTiles.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="monaco.mbtiles">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

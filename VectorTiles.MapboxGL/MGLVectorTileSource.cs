@@ -67,7 +67,7 @@ namespace VectorTiles.MapboxGL
             if (features.Count == 0)
                 return null;
 
-            var result = new VectorTile(TileSize, (int)Math.Log(overzoom.Scale, 2));
+            var result = new VectorTile(TileSize, (int)zoom, (int)Math.Log(overzoom.Scale, 2));
 
             // Vector tiles have always a size of 4096 x 4096, but there could be overzoom (use of lower zoom level)
             // Drawing rect is only the part, that should later visible. With overzoom, only a part of the tile is used.

@@ -1,6 +1,7 @@
 ﻿using BruTile;
 using SkiaSharp;
 using System.Collections.Generic;
+using VectorTiles.MapboxGL.Extensions;
 
 namespace VectorTiles.MapboxGL
 {
@@ -13,7 +14,7 @@ namespace VectorTiles.MapboxGL
     /// </remarks>
     public class MGLBackgroundTileSource : Drawable, IDrawableTileSource
     {
-        public ITileSchema Schema => new TileSchema();
+        public ITileSchema Schema { get; }
 
         public string Name => "Background";
 
@@ -27,6 +28,16 @@ namespace VectorTiles.MapboxGL
         /// MGLPaint to use when drawing background
         /// </summary>
         public MGLPaint BackgroundPaint { get; internal set; }
+
+        public MGLBackgroundTileSource()
+        {
+            var schema = new TileSchema();
+            schema.Extent = new Extent(-20037508, -34662080, 20037508, 34662080);
+            Schema = schema;
+
+            for (var i = 0; i <= 30; i++)
+                Schema.Resolutions.Add(i.ToString(), new BruTile.Resolution(i.ToString(), i.ToResolution()));
+        }
 
         public Drawable GetDrawable(TileInfo tileInfo)
         {

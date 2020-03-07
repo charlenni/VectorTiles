@@ -190,6 +190,10 @@ namespace VectorTiles.MapboxGL
                 else if (source.Url.StartsWith("mbtiles"))
                 {
                     var filename = source.Url.Substring(10);
+                    var dir = Directory.GetCurrentDirectory();
+                    filename = Path.Combine(dir, filename);
+                    if (!File.Exists(filename))
+                        return null;
                     var connection = new SQLiteConnectionString(filename, false);
                     var dataSource = new MbTilesTileSource(connection);
                     jsonSource = JsonConvert.DeserializeObject<JsonSource>(dataSource.Json);
@@ -264,7 +268,12 @@ namespace VectorTiles.MapboxGL
             else if (source.Tiles[0].StartsWith("mbtiles://"))
             {
                 // We should get the tile source from someone else
-                tileSource = new MbTilesTileSource(new SQLiteConnectionString(source.Tiles[0].Substring(10), false),
+                var filename = source.Tiles[0].Substring(10);
+                var dir = Directory.GetCurrentDirectory();
+                filename = Path.Combine(dir, filename);
+                if (!File.Exists(filename))
+                    return null;
+                tileSource = new MbTilesTileSource(new SQLiteConnectionString(filename, false),
                     new GlobalSphericalMercator(
                         source.Scheme == "tms" ? YAxis.TMS : YAxis.OSM,
                         minZoomLevel: source.ZoomMin ?? 0,

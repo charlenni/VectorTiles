@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>b24116ae-4457-4a16-bed1-38ade8a12a08</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Mapsui.Samples.Forms.Shared</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)App.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)MainPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Styles\osm-liberty.json" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Styles\sprites\osm-liberty.json" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Styles\sprites\osm-liberty.png" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Styles\sprites\osm-liberty@2x.json" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Styles\sprites\osm-liberty@2x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)monaco.mbtiles">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Styles\LICENSE.md" />
+    <None Include="$(MSBuildThisFileDirectory)Styles\osm-liberty - Kopie.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)App.xaml.cs">
+      <SubType>Code</SubType>
+      <DependentUpon>%(Filename)</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)DrawableTile.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DrawableTileProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DrawableTileStyle.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DrawableTileStyleRenderer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MainPage.xaml.cs">
+      <SubType>Code</SubType>
+      <DependentUpon>%(Filename)</DependentUpon>
+    </Compile>
+  </ItemGroup>
+</Project>

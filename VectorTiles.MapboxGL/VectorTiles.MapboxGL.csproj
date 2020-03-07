@@ -7,7 +7,7 @@
   <ItemGroup>
     <PackageReference Include="BruTile" Version="2.1.2" />
     <PackageReference Include="BruTile.MbTiles" Version="2.1.2" />
-    <PackageReference Include="protobuf-net" Version="2.4.0" />
+    <PackageReference Include="protobuf-net" Version="2.4.4" />
   </ItemGroup>
 
   <ItemGroup>

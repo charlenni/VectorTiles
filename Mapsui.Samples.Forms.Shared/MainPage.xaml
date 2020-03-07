@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:d="http://xamarin.com/schemas/2014/forms/design"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+			 xmlns:mapsui="clr-namespace:Mapsui.UI.Forms;assembly=Mapsui.UI.Forms"
+             x:Class="Mapsui.Samples.Forms.MainPage">
+
+    <AbsoluteLayout>
+        <mapsui:MapView x:Name="mapView"
+    		    VerticalOptions="FillAndExpand"
+                HorizontalOptions="FillAndExpand"
+		        BackgroundColor="Gray" 
+		        Margin="0" 
+                AbsoluteLayout.LayoutFlags="All" 
+                AbsoluteLayout.LayoutBounds="0,0, 1,1" />
+        <Label x:Name="lblInfo" AbsoluteLayout.LayoutBounds="20,20, 200,100" AbsoluteLayout.LayoutFlags="None" BackgroundColor="White" Opacity="0.5"/>
+        <Button x:Name="btnZoomIn" Text="Zoom in" AbsoluteLayout.LayoutBounds="20,140, 200,30" AbsoluteLayout.LayoutFlags="None" BackgroundColor="White" Opacity="0.8"/>
+        <Button x:Name="btnZoomOut" Text="Zoom out" AbsoluteLayout.LayoutBounds="20,180, 200,30" AbsoluteLayout.LayoutFlags="None" BackgroundColor="White" Opacity="0.8"/>
+    </AbsoluteLayout>
+
+</ContentPage>

@@ -40,9 +40,10 @@ namespace VectorTiles
         // TODO
         //List<PathText> PathTextBucket { get; } = new List<PathText>();
 
-        public VectorTile(double tileSize, int overzoom)
+        public VectorTile(double tileSize, int zoom, int overzoom)
         {
             TileSize = tileSize;
+            Zoom = zoom;
             Overzoom = overzoom;
         }
 
@@ -54,12 +55,16 @@ namespace VectorTiles
                 Tags = Context.Tags,
             };
 
+            var scale = Context.Scale / ((float)Context.Zoom - Zoom + 1);
+
             canvas.Save();
 
             foreach (var pair in PathPaintBucket)
             {
                 var paint = pair.Paint.CreatePaint(context);
 
+                paint.StrokeWidth *= scale;
+                
                 //var test = true;
                 //if (paint.Style == SKPaintStyle.Fill)
                 //{
