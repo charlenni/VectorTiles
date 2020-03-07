@@ -254,19 +254,23 @@ namespace VectorTiles.MapboxGL.Converter
 
                 if (paint.FillPattern.Stops == null && !paint.FillPattern.SingleVal.Contains("{"))
                 {
-                    var name = paint.FillPattern.SingleVal;
-
-                    var sprite = spriteAtlas.GetSprite(paint.FillPattern.SingleVal);
-                    if (sprite != null && sprite.Image != null)
-                    { 
-                        area.SetFixShader(sprite.Image.ToShader(SKShaderTileMode.Repeat, SKShaderTileMode.Repeat));
-                    }
-                    else
+                    area.SetVariableShader((context) =>
                     {
-                        // Log information, that no sprite is found
-                        // TODO
-                        // Logging.Logger.Log(Logging.LogLevel.Information, $"Fill pattern {name} not found");
-                    }
+                        var name = paint.FillPattern.SingleVal;
+
+                        var sprite = spriteAtlas.GetSprite(name);
+                        if (sprite != null && sprite.Image != null)
+                        {
+                            return sprite.Image.ToShader(SKShaderTileMode.Repeat, SKShaderTileMode.Repeat, SKMatrix.MakeScale(context.Scale, context.Scale));
+                        }
+                        else
+                        {
+                            // Log information, that no sprite is found
+                            // TODO
+                            // Logging.Logger.Log(Logging.LogLevel.Information, $"Fill pattern {name} not found");
+                            return null;
+                        }
+                    });
                 }
                 else
                 {
@@ -277,7 +281,7 @@ namespace VectorTiles.MapboxGL.Converter
                         var sprite = spriteAtlas.GetSprite(name);
                         if (sprite != null && sprite.Image != null)
                         {
-                            return sprite.Image.ToShader(SKShaderTileMode.Repeat, SKShaderTileMode.Repeat);
+                            return sprite.Image.ToShader(SKShaderTileMode.Repeat, SKShaderTileMode.Repeat, SKMatrix.MakeScale(context.Scale, context.Scale));
                         }
                         else
                         {

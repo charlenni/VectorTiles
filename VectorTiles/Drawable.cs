@@ -11,7 +11,7 @@ namespace VectorTiles
         public EvaluationContext Context { get; } = new EvaluationContext(0);
 
         /// <summary>
-        /// Factor for zoom for this tile
+        /// Zoom factor for this tile
         /// </summary>
         public int Zoom { get; internal set; } = 0;
 

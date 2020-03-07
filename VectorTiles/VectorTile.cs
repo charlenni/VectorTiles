@@ -50,21 +50,19 @@ namespace VectorTiles
         protected override void OnDraw(SKCanvas canvas)
         {
             // Do this, because of the different sizes of tiles (512 instead of 256) and overzoom
-            var context = new EvaluationContext(Context.Zoom + Overzoom)
+            var context = new EvaluationContext(Context.Zoom)
             {
                 Tags = Context.Tags,
             };
 
-            var scale = Context.Scale / ((float)Context.Zoom - Zoom + 1);
+            var scale = Context.Scale;
 
             canvas.Save();
 
             foreach (var pair in PathPaintBucket)
             {
-                var paint = pair.Paint.CreatePaint(context);
+                var paint = pair.Paint.CreatePaint(Context);
 
-                paint.StrokeWidth *= scale;
-                
                 //var test = true;
                 //if (paint.Style == SKPaintStyle.Fill)
                 //{

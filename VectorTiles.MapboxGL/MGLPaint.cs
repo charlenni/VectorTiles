@@ -6,6 +6,7 @@ namespace VectorTiles.MapboxGL
     public class MGLPaint : IVectorPaint
     {
         SKPaint paint = new SKPaint() { IsAntialias = true };  // Set this bei default
+        float strokeWidth;
         SKMatrix matrix = SKMatrix.MakeIdentity();
 
         public SKPaint CreatePaint(EvaluationContext context)
@@ -29,7 +30,11 @@ namespace VectorTiles.MapboxGL
 
             if (variableStrokeWidth)
             {
-                paint.StrokeWidth = funcStrokeWidth(context);
+                paint.StrokeWidth = funcStrokeWidth(context) * context.Scale;
+            }
+            else
+            {
+                paint.StrokeWidth = strokeWidth * context.Scale;
             }
 
             if (variableStrokeCap)
@@ -62,7 +67,7 @@ namespace VectorTiles.MapboxGL
             }
             else if (fixDashArray != null)
             {
-                var array = fixDashArray;
+                var array = new float[fixDashArray.Length];
                 for (var i = 0; i < array.Length; i++)
                     array[i] = fixDashArray[i] * paint.StrokeWidth;
                 paint.PathEffect = SKPathEffect.CreateDash(array, 0);
@@ -166,7 +171,7 @@ namespace VectorTiles.MapboxGL
         public void SetFixStrokeWidth(float width)
         {
             variableStrokeWidth = false;
-            paint.StrokeWidth = width;
+            strokeWidth = width;
         }
 
         public void SetVariableStrokeWidth(Func<EvaluationContext, float> func)
@@ -267,7 +272,9 @@ namespace VectorTiles.MapboxGL
         public void SetFixDashArray(float[] array)
         {
             variableDashArray = false;
-            fixDashArray = array;
+            fixDashArray = new float[array.Length];
+            for (int i = 0; i < array.Length; i++)
+                fixDashArray[i] = array[i];
         }
 
         public void SetVariableDashArray(Func<EvaluationContext, float[]> func)

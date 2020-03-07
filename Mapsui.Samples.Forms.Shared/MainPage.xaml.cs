@@ -33,7 +33,7 @@ namespace Mapsui.Samples.Forms
 
             mapView.Map = map;
             mapView.Navigator = new AnimatedNavigator(map, (IViewport)mapView.Viewport);
-            mapView.BackgroundColor = new Color(239, 239, 239);
+            mapView.Map.BackColor = new Mapsui.Styles.Color(239, 239, 239);
 
             // Get Mapbox GL Style File
             var mglStyleFile = CreateMGLStyleFile();
