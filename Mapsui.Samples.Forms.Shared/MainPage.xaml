@@ -18,6 +18,7 @@
         <Label x:Name="lblInfo" AbsoluteLayout.LayoutBounds="20,20, 150,100" AbsoluteLayout.LayoutFlags="None" BackgroundColor="White" Opacity="0.5"/>
         <Button x:Name="btnZoomIn" Text="Zoom in" AbsoluteLayout.LayoutBounds="20,140, 150,40" AbsoluteLayout.LayoutFlags="None" BackgroundColor="White" Opacity="0.8"/>
         <Button x:Name="btnZoomOut" Text="Zoom out" AbsoluteLayout.LayoutBounds="20,180, 150,40" AbsoluteLayout.LayoutFlags="None" BackgroundColor="White" Opacity="0.8"/>
+        <Button x:Name="btnFlight" Text="Flight" AbsoluteLayout.LayoutBounds="20,220, 150,40" AbsoluteLayout.LayoutFlags="None" BackgroundColor="White" Opacity="0.8"/>
     </AbsoluteLayout>
 
 </ContentPage>

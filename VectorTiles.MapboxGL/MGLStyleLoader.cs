@@ -14,6 +14,7 @@ using System.IO;
 using System.Linq;
 using GeoAPI.Geometries;
 using SkiaSharp;
+using VectorTiles.MapboxGL.Extensions;
 
 namespace VectorTiles.MapboxGL
 {
@@ -22,6 +23,8 @@ namespace VectorTiles.MapboxGL
     /// </summary>
     public static class MGLStyleLoader
     {
+        public static string DirectoryForFiles = "";
+
         /// <summary>
         /// Load a Mapbox GL Json style file
         /// </summary>
@@ -190,8 +193,7 @@ namespace VectorTiles.MapboxGL
                 else if (source.Url.StartsWith("mbtiles"))
                 {
                     var filename = source.Url.Substring(10);
-                    var dir = Directory.GetCurrentDirectory();
-                    filename = Path.Combine(dir, filename);
+                    filename = Path.Combine(DirectoryForFiles, filename);
                     if (!File.Exists(filename))
                         return null;
                     var connection = new SQLiteConnectionString(filename, false);
@@ -226,8 +228,8 @@ namespace VectorTiles.MapboxGL
 
             var vectorTileSource = new MGLVectorTileSource(name, tileSource)
             {
-                MinVisible = jsonSource?.ZoomMax ?? 30,
-                MaxVisible = jsonSource?.ZoomMin ?? 0,
+                MinVisible = (jsonSource?.ZoomMax ?? 30).ToResolution(),
+                MaxVisible = (jsonSource?.ZoomMin ?? 0).ToResolution(),
                 TileSize = (int)jsonSource?.TileSize,
             };
 
@@ -269,8 +271,7 @@ namespace VectorTiles.MapboxGL
             {
                 // We should get the tile source from someone else
                 var filename = source.Tiles[0].Substring(10);
-                var dir = Directory.GetCurrentDirectory();
-                filename = Path.Combine(dir, filename);
+                filename = Path.Combine(DirectoryForFiles, filename);
                 if (!File.Exists(filename))
                     return null;
                 tileSource = new MbTilesTileSource(new SQLiteConnectionString(filename, false),

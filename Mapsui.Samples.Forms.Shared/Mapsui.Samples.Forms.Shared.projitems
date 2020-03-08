@@ -24,9 +24,9 @@
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)Styles\sprites\osm-liberty@2x.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)monaco.mbtiles">
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)monaco.mbtiles">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </EmbeddedResource>
     <None Include="$(MSBuildThisFileDirectory)Styles\LICENSE.md" />
     <None Include="$(MSBuildThisFileDirectory)Styles\osm-liberty - Kopie.json" />
   </ItemGroup>
@@ -36,7 +36,6 @@
       <DependentUpon>%(Filename)</DependentUpon>
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)DrawableTile.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)DrawableTileProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DrawableTileStyle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DrawableTileStyleRenderer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MainPage.xaml.cs">

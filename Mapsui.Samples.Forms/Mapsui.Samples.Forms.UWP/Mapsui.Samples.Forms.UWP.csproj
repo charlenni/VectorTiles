@@ -140,10 +140,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Mapsui">
-      <Version>2.0.0-beta.37</Version>
+      <Version>2.0.0-b39</Version>
     </PackageReference>
     <PackageReference Include="Mapsui.Forms">
-      <Version>2.0.0-beta.37</Version>
+      <Version>2.0.0-b39</Version>
     </PackageReference>
     <PackageReference Include="SkiaSharp">
       <Version>1.68.2-preview.17</Version>

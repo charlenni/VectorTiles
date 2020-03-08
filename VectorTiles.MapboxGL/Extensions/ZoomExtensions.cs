@@ -23,7 +23,12 @@ namespace VectorTiles.MapboxGL.Extensions
 
         public static double ToResolution(this int level)
         {
-                return 2 * ScaleFactor / (1 << level);
+            return 2 * ScaleFactor / (1 << level);
+        }
+
+        public static double ToZoomLevel(this double resolution)
+        {
+            return Math.Log(2 * ScaleFactor / resolution, 2);
         }
     }
 }

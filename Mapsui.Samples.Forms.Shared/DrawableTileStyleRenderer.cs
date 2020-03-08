@@ -41,11 +41,11 @@ namespace Mapsui.Samples.Forms
                 vectorTile.Context.Scale = 1f / scale;
 
                 canvas.Translate(new SKPoint(destination.Left, destination.Top));
-                canvas.Scale(scale);
-                canvas.ClipRect(clipRect);
+                //canvas.ClipRect(clipRect);
+                canvas.Scale(scale, scale);
                 canvas.DrawDrawable(vectorTile, 0, 0);
                 
-                var frame = vectorTile.Bounds;
+                var frame = SKRect.Inflate(vectorTile.Bounds, -1, -1);
                 canvas.DrawRect(frame, new SKPaint() { Style = SKPaintStyle.Stroke, Color = SKColors.Red });
 			}
 

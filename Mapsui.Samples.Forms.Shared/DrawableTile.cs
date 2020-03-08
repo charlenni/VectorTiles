@@ -1,13 +1,26 @@
 ﻿using System;
+using BruTile;
 using Mapsui.Geometries;
 using Mapsui.Geometries.WellKnownBinary;
 using Mapsui.Geometries.WellKnownText;
+using Mapsui.Providers;
 using VectorTiles;
 
 namespace Mapsui.Samples.Forms
 {
     public class DrawableTile : Geometry
     {
+        public static Feature DrawableTileToFeature(TileInfo tileInfo, object data)
+        {
+            Drawable drawable = (Drawable)data;
+            if (drawable == null)
+                return null;
+            IGeometry drawableTile = new DrawableTile(drawable, new BoundingBox(tileInfo.Extent.MinX, tileInfo.Extent.MinY, tileInfo.Extent.MaxX, tileInfo.Extent.MaxY));
+            var feature = new Feature();
+            feature.Geometry = drawableTile;
+            return feature;
+        }
+
         private readonly BoundingBox boundingBox;
 
         public DrawableTile(Drawable data, BoundingBox box)

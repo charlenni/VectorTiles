@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.Serialization.Formatters.Binary;
 using BruTile;
 using NetTopologySuite.Geometries;
 using SkiaSharp;
@@ -12,11 +13,36 @@ namespace VectorTiles.MapboxGL
 {
     public class MGLVectorTileSource : IDrawableTileSource
     {
+        private double minVisible = 30.ToResolution();
+        private double maxVisible = 0.ToResolution();
+
         public string Name { get; }
 
-        public double MinVisible { get; set; }
+        public double MinVisible
+        {
+            get => minVisible;
+            set
+            {
+                if (minVisible != value)
+                {
+                    minVisible = value;
+                    UpdateResolutions();
+                }
+            }
+        }
 
-        public double MaxVisible { get; set; }
+        public double MaxVisible
+        {
+            get => maxVisible;
+            set
+            {
+                if (maxVisible != value)
+                {
+                    maxVisible = value;
+                    UpdateResolutions();
+                }
+            }
+        }
 
         public int TileSize { get; set; } = 512;
 
@@ -35,6 +61,8 @@ namespace VectorTiles.MapboxGL
         {
             Name = name;
             Source = source;
+
+            UpdateResolutions();
         }
 
         /// <summary>
@@ -158,6 +186,13 @@ namespace VectorTiles.MapboxGL
             return symbol;
         }
 
+        private void UpdateResolutions()
+        {
+            Source.Schema.Resolutions.Clear();
+            for (int i = (int)MaxVisible.ToZoomLevel(); i <= (int)MinVisible.ToZoomLevel(); i++)
+                Source.Schema.Resolutions.Add(i.ToString(), new Resolution(i.ToString(), i.ToResolution()));
+        }
+
         /// <summary>
         /// Create path for feature
         /// </summary>
@@ -271,10 +306,15 @@ namespace VectorTiles.MapboxGL
                 scale <<= 1;
                 offsetX = offsetX + (col % 2) * offsetFactor;
                 offsetY = offsetY + (row % 2) * offsetFactor * (Source.Schema.YAxis == YAxis.TMS ? +1f : -1f);
+                var doubleWidth = info.Extent.Width * 2.0;
+                var doubleHeight = info.Extent.Height * 2.0;
+                //var minX = info.Extent.MinX  ((col % 2) * halfWidth);
+                //var minY = info.Extent.MinY + ((row % 2) * halfHeight);
                 zoom--;
                 row >>= 1;
                 col >>= 1;
                 offsetFactor <<= 1;
+                //info.Extent = new Extent(minX, minY, minX + halfWidth, minY + halfHeight);
                 info.Index = new TileIndex(col, row, zoom.ToString());
                 tileData = Source.GetTile(info);
             }
@@ -342,7 +382,16 @@ namespace VectorTiles.MapboxGL
 
         public byte[] GetTile(TileInfo tileInfo)
         {
-            throw new NotImplementedException();
+            var drawable = GetDrawable(tileInfo);
+
+            BinaryFormatter bf = new BinaryFormatter();
+            using (var ms = new MemoryStream())
+            {
+                bf.Serialize(ms, drawable);
+                return ms.ToArray();
+            }
+
+            return null;
         }
     }
 }
