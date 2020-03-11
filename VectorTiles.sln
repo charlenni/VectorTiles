@@ -21,9 +21,9 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Mapsui.Samples.Forms.Shared
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		Mapsui.Samples.Forms.Shared\Mapsui.Samples.Forms.Shared.projitems*{3b473f46-720a-4cea-b1a6-bb8fef6a1e25}*SharedItemsImports = 4
-		Mapsui.Samples.Forms.Shared\Mapsui.Samples.Forms.Shared.projitems*{7e9be1ae-44a6-42dd-a0ad-0f9b71df4b13}*SharedItemsImports = 4
-		Mapsui.Samples.Forms.Shared\Mapsui.Samples.Forms.Shared.projitems*{95965e41-705f-4737-ac07-233fcbf050aa}*SharedItemsImports = 4
+		Mapsui.Samples.Forms\Mapsui.Samples.Forms.Shared\Mapsui.Samples.Forms.Shared.projitems*{3b473f46-720a-4cea-b1a6-bb8fef6a1e25}*SharedItemsImports = 4
+		Mapsui.Samples.Forms\Mapsui.Samples.Forms.Shared\Mapsui.Samples.Forms.Shared.projitems*{7e9be1ae-44a6-42dd-a0ad-0f9b71df4b13}*SharedItemsImports = 4
+		Mapsui.Samples.Forms\Mapsui.Samples.Forms.Shared\Mapsui.Samples.Forms.Shared.projitems*{95965e41-705f-4737-ac07-233fcbf050aa}*SharedItemsImports = 4
 		Mapsui.Samples.Forms.Shared\Mapsui.Samples.Forms.Shared.projitems*{b24116ae-4457-4a16-bed1-38ade8a12a08}*SharedItemsImports = 13
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

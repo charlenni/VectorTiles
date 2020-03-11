@@ -85,7 +85,7 @@ namespace Mapsui.Samples.Forms
             {
                 if (tileSource is MGLVectorTileSource)
                 {
-                    var layer = new TileLayer(tileSource, fetchStrategy: new FetchStrategy(0), fetchToFeature: DrawableTile.DrawableTileToFeature, fetchGetTile: tileSource.GetDrawable);
+                    var layer = new TileLayer(tileSource, fetchStrategy: new FetchStrategy(30), fetchToFeature: DrawableTile.DrawableTileToFeature, fetchGetTile: tileSource.GetDrawable);
                     layer.MinVisible = 30.ToResolution();
                     layer.MaxVisible = 0.ToResolution();
                     layer.Style = new DrawableTileStyle();
@@ -94,7 +94,7 @@ namespace Mapsui.Samples.Forms
             }
 
             map.Home = n => n.NavigateTo(new Geometries.Point(825650.0, 5423050.0).BoundingBox);
-            mapView.Navigator.NavigateTo(new Geometries.Point(825650.0, 5423050.0), 5.ToResolution());
+            mapView.Navigator.NavigateTo(new Geometries.Point(825650.0, 5423050.0), 12.ToResolution());
 
             lblInfo.Text = "";
 
