@@ -26,5 +26,14 @@ namespace VectorTiles.MapboxGL.Extensions
 
             return result;
         }
+
+        public static TileInfo Copy(this TileInfo tileInfo)
+        {
+            var result = new TileInfo();
+
+            result.Index = new TileIndex(tileInfo.Index.Col, tileInfo.Index.Row, tileInfo.Index.Level);
+
+            return result;
+        }
     }
 }

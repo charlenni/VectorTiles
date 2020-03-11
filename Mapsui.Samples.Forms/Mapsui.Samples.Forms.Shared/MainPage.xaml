@@ -15,7 +15,10 @@
 		        Margin="0" 
                 AbsoluteLayout.LayoutFlags="All" 
                 AbsoluteLayout.LayoutBounds="0,0, 1,1" />
-        <Label x:Name="lblInfo" AbsoluteLayout.LayoutBounds="20,20, 200,100" AbsoluteLayout.LayoutFlags="None" BackgroundColor="White" Opacity="0.5"/>
+        <Label x:Name="lblInfo" AbsoluteLayout.LayoutBounds="20,20, 150,30" AbsoluteLayout.LayoutFlags="None" BackgroundColor="White" Opacity="0.8" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+        <Button x:Name="btnZoomIn" Text="Zoom in" AbsoluteLayout.LayoutBounds="20,55, 150,30" AbsoluteLayout.LayoutFlags="None" BackgroundColor="White" Opacity="0.8" FontSize="Small" />
+        <Button x:Name="btnZoomOut" Text="Zoom out" AbsoluteLayout.LayoutBounds="20,90, 150,30" AbsoluteLayout.LayoutFlags="None" BackgroundColor="White" Opacity="0.8" FontSize="Small" />
+        <Button x:Name="btnFlight" Text="Flight" AbsoluteLayout.LayoutBounds="20,125, 150,30" AbsoluteLayout.LayoutFlags="None" BackgroundColor="White" Opacity="0.8" FontSize="Small" />
     </AbsoluteLayout>
 
 </ContentPage>

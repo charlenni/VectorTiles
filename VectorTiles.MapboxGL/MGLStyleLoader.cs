@@ -278,7 +278,7 @@ namespace VectorTiles.MapboxGL
                     new GlobalSphericalMercator(
                         source.Scheme == "tms" ? YAxis.TMS : YAxis.OSM,
                         minZoomLevel: source.ZoomMin ?? 0,
-                        maxZoomLevel: source.ZoomMax ?? 14
+                        maxZoomLevel: source.ZoomMax ?? 30
                     ));
             }
 

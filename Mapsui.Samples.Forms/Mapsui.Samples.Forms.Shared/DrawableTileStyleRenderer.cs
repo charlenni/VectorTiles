@@ -25,7 +25,7 @@ namespace Mapsui.Samples.Forms
 				var priorMatrix = canvas.TotalMatrix;
 
 				var matrix = CreateRotationMatrix(viewport, boundingBox, priorMatrix);
-
+                // TODO
 				canvas.SetMatrix(matrix);
 
 				var destination = new BoundingBox(0.0, 0.0, boundingBox.Width, boundingBox.Height).ToSkia();
@@ -35,18 +35,18 @@ namespace Mapsui.Samples.Forms
 			else
 			{
                 var destination = RoundToPixel(WorldToScreen(viewport, feature.Geometry.BoundingBox)).ToSkia();
-                var clipRect = vectorTile.Bounds;
+                //var clipRect = vectorTile.Bounds;
 
                 var scale = Math.Max(destination.Width, destination.Height) / vectorTile.Bounds.Width;
                 vectorTile.Context.Scale = 1f / scale;
 
                 canvas.Translate(new SKPoint(destination.Left, destination.Top));
-                //canvas.ClipRect(clipRect);
                 canvas.Scale(scale, scale);
+                //canvas.ClipRect(new SKRect(0, 0, vectorTile.Bounds.Width * scale, vectorTile.Bounds.Height * scale));
                 canvas.DrawDrawable(vectorTile, 0, 0);
                 
-                var frame = SKRect.Inflate(vectorTile.Bounds, -1, -1);
-                canvas.DrawRect(frame, new SKPaint() { Style = SKPaintStyle.Stroke, Color = SKColors.Red });
+                //var frame = SKRect.Inflate(vectorTile.Bounds, -1, -1);
+                //canvas.DrawRect(frame, new SKPaint() { Style = SKPaintStyle.Stroke, Color = SKColors.Red });
 			}
 
             return true;

@@ -1,4 +1,5 @@
-﻿using Mapsui.Layers;
+﻿using Mapsui.Fetcher;
+using Mapsui.Layers;
 using Mapsui.Projection;
 using Mapsui.Utilities;
 using Mapsui.Widgets.ScaleBar;
@@ -30,10 +31,13 @@ namespace Mapsui.Samples.Forms
 #if __ANDROID__
             dir = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 #endif
+#if __IOS__
+            dir = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+#endif
             // Save for use of style loader for mbtiles files
             MGLStyleLoader.DirectoryForFiles = dir;
             filename = Path.Combine(dir, filename);
-//            if (!File.Exists(filename))
+            if (!File.Exists(filename))
             {
                 var assembly = Assembly.GetExecutingAssembly();
                 var resourceNames = assembly.GetManifestResourceNames();
@@ -55,12 +59,15 @@ namespace Mapsui.Samples.Forms
                 Transformation = new MinimalTransformation()
             };
             map.Widgets.Add(new ScaleBarWidget(map) { TextAlignment = Widgets.Alignment.Center, HorizontalAlignment = Widgets.HorizontalAlignment.Left, VerticalAlignment = Widgets.VerticalAlignment.Bottom, MarginY = 20 });
+            map.RotationLock = true;
 
             mapView.Map = map;
             mapView.MyLocationLayer.Enabled = false;
             mapView.Navigator = new AnimatedNavigator(map, (IViewport)mapView.Viewport);
             mapView.Viewport.ViewportChanged += (s, args) => { Device.BeginInvokeOnMainThread(() => { lblInfo.Text = $"Zoom Level: {mapView.Viewport.Resolution.ToZoomLevel():0.0}"; }); };
             mapView.Map.BackColor = new Mapsui.Styles.Color(239, 239, 239);
+            mapView.UseDoubleTap = false;
+
 
             // Get Mapbox GL Style File
             var mglStyleFile = CreateMGLStyleFile();
@@ -78,7 +85,7 @@ namespace Mapsui.Samples.Forms
             {
                 if (tileSource is MGLVectorTileSource)
                 {
-                    var layer = new TileLayer(tileSource, fetchToFeature: DrawableTile.DrawableTileToFeature, fetchGetTile: tileSource.GetDrawable);
+                    var layer = new TileLayer(tileSource, fetchStrategy: new FetchStrategy(0), fetchToFeature: DrawableTile.DrawableTileToFeature, fetchGetTile: tileSource.GetDrawable);
                     layer.MinVisible = 30.ToResolution();
                     layer.MaxVisible = 0.ToResolution();
                     layer.Style = new DrawableTileStyle();
@@ -87,7 +94,7 @@ namespace Mapsui.Samples.Forms
             }
 
             map.Home = n => n.NavigateTo(new Geometries.Point(825650.0, 5423050.0).BoundingBox);
-            mapView.Navigator.NavigateTo(new Geometries.Point(825650.0, 5423050.0), 1.0);
+            mapView.Navigator.NavigateTo(new Geometries.Point(825650.0, 5423050.0), 5.ToResolution());
 
             lblInfo.Text = "";
 

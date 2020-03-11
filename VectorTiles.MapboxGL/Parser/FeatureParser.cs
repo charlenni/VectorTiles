@@ -88,6 +88,7 @@ namespace VectorTiles.MapboxGL.Parser
                         // Convert all points of this ring
                         var ring = new LinearRing(geometries[i].ToArray());
 
+                        // We must use CCW instead of CW, because y axis is oriented from up to down.
                         if (ring.IsCCW && polygon != null)
                         {
                             holes.Add(ring);
