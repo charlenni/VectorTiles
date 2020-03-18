@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using BruTile;
+using BruTile.Predefined;
 using NetTopologySuite.Geometries;
 using SkiaSharp;
 using VectorTiles.MapboxGL.Extensions;
@@ -13,8 +15,10 @@ namespace VectorTiles.MapboxGL
 {
     public class MGLVectorTileSource : IDrawableTileSource
     {
-        private double minVisible = 30.ToResolution();
+        private double minVisible = 14.ToResolution();
         private double maxVisible = 0.ToResolution();
+        private double minZoomLevelProvider;
+        private double maxZoomLevelProvider;
 
         public string Name { get; }
 
@@ -53,14 +57,21 @@ namespace VectorTiles.MapboxGL
 
         public List<IVectorStyleLayer> StyleLayers { get; } = new List<IVectorStyleLayer>();
 
-        public ITileSchema Schema => Source.Schema;
+        public ITileSchema Schema { get; }
 
         public Attribution Attribution => Source.Attribution;
 
         public MGLVectorTileSource(string name, ITileSource source)
         {
+            minZoomLevelProvider = source.Schema.Resolutions.First<KeyValuePair<string, Resolution>>().Value.UnitsPerPixel.ToZoomLevel();
+            maxZoomLevelProvider = source.Schema.Resolutions.Last<KeyValuePair<string, Resolution>>().Value.UnitsPerPixel.ToZoomLevel();
+
             Name = name;
             Source = source;
+            Schema = new GlobalSphericalMercator(source.Schema.YAxis, minZoomLevel: (int)minZoomLevelProvider, maxZoomLevel: (int)maxZoomLevelProvider);
+
+            MinVisible = ((int)maxZoomLevelProvider).ToResolution();
+            MaxVisible = ((int)minZoomLevelProvider).ToResolution();
 
             UpdateResolutions();
         }
@@ -72,8 +83,6 @@ namespace VectorTiles.MapboxGL
         /// <returns>Drawable VectorTile and List of symbols</returns>
         public Drawable GetDrawable(TileInfo ti)
         {
-            System.Diagnostics.Debug.WriteLine($"GetDrawable {DateTime.Now.Ticks}: {ti.Index.Col}/{ti.Index.Row}/{ti.Index.Level}");
-
             // Check Schema for TileInfo
             var tileInfo = Schema.YAxis == YAxis.OSM ? ti.ToTMS() : ti.Copy();
 
@@ -81,7 +90,7 @@ namespace VectorTiles.MapboxGL
             var zoom = float.Parse(tileInfo.Index.Level);
 
             // TODO: Should be the max zoom level of the underlaying provider
-            if (zoom > MinVisible.ToZoomLevel())
+            if (zoom > maxZoomLevelProvider)
                 return null;
 
             // Get data for this tile
@@ -100,8 +109,6 @@ namespace VectorTiles.MapboxGL
 
             if (features.Count == 0)
                 return null;
-
-            System.Diagnostics.Debug.WriteLine($"CreateVectorTile {DateTime.Now.Ticks}: {ti.Index.Col}/{ti.Index.Row}/{ti.Index.Level}");
 
             var result = new VectorTile(TileSize, (int)zoom, (int)Math.Log(overzoom.Scale, 2));
 
@@ -150,24 +157,22 @@ namespace VectorTiles.MapboxGL
                     }
                 }
 
-                // Now we have all features on same layer with matching filters
                 if (path.PointCount > 0)
                 {
                     // We only want path, that are inside of the drawing rect
                     if (!path.Bounds.IntersectsWith(drawingRect))
                         continue;
-
-                    foreach (var paint in styleLayer.Paints)
-                        result.PathPaintBucket.Add(new PathPaintPair(path, paint));
                 }
+
+                // Now we have all features on same layer with matching filters
+                foreach (var paint in styleLayer.Paints)
+                    result.PathPaintBucket.Add(new PathPaintPair(path, paint));
 
                 if (symbols.Count > 0)
                 {
                     result.SymbolBucket.Add(symbols);
                 }
             }
-
-            System.Diagnostics.Debug.WriteLine($"ReadyVectorTile {DateTime.Now.Ticks}: {ti.Index.Col}/{ti.Index.Row}/{ti.Index.Level}");
 
             return result;
         }
@@ -187,7 +192,7 @@ namespace VectorTiles.MapboxGL
                 case GeometryType.LineString:
                     break;
                 default:
-                    System.Diagnostics.Debug.WriteLine($"There are other geometries: ${feature.Type.ToString()}");
+                    System.Diagnostics.Debug.WriteLine($"There are other geometries: {feature.Type.ToString()}");
                     break;
             }
 
@@ -198,9 +203,9 @@ namespace VectorTiles.MapboxGL
 
         private void UpdateResolutions()
         {
-            Source.Schema.Resolutions.Clear();
+            Schema.Resolutions.Clear();
             for (int i = (int)MaxVisible.ToZoomLevel(); i <= (int)MinVisible.ToZoomLevel(); i++)
-                Source.Schema.Resolutions.Add(i.ToString(), new Resolution(i.ToString(), i.ToResolution()));
+                Schema.Resolutions.Add(i.ToString(), new Resolution(i.ToString(), i.ToResolution()));
         }
 
         /// <summary>
@@ -291,8 +296,6 @@ namespace VectorTiles.MapboxGL
         /// <returns>Raw tile data, factor for enlargement for this data and offsets for parts of this data, which to use</returns>
         private (byte[], Overzoom) GetTileData(TileInfo tileInfo)
         {
-            System.Diagnostics.Debug.WriteLine($"GetTile {DateTime.Now.Ticks}: {tileInfo.Index.Col}/{tileInfo.Index.Row}/{tileInfo.Index.Level}");
-
             var zoom = (int)float.Parse(tileInfo.Index.Level);
             var scale = 1;
             var offsetX = 0f;
@@ -306,8 +309,12 @@ namespace VectorTiles.MapboxGL
             // Get byte data for this tile
             var tileData = Source.GetTile(tileInfo);
 
-            //if (tileData != null)
+            if (tileData != null)
                 return (tileData, Overzoom.None);
+
+            // We only create overzoom tiles when zoom is between min and max zoom
+            if (zoom < Source.Schema.Resolutions.First().Value.UnitsPerPixel.ToZoomLevel() || zoom > Source.Schema.Resolutions.Last().Value.UnitsPerPixel.ToZoomLevel())
+                return (null, Overzoom.None);
 
             var info = tileInfo;
             var row = info.Index.Row;

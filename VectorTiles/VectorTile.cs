@@ -59,6 +59,9 @@ namespace VectorTiles
 
             canvas.Save();
 
+            var watch = new System.Diagnostics.Stopwatch();
+            watch.Start();
+
             foreach (var pair in PathPaintBucket)
             {
                 var paint = pair.Paint.CreatePaint(Context);
@@ -72,6 +75,9 @@ namespace VectorTiles
 
                 canvas.DrawPath(pair.Path, paint);
             }
+
+            watch.Stop();
+            System.Diagnostics.Debug.WriteLine($"Draw VectorTile: {watch.ElapsedMilliseconds}");
 
             canvas.Restore();
         }

@@ -13,6 +13,8 @@ namespace Mapsui.Samples.Forms
 {
     public class DrawableTileStyleRenderer : ISkiaStyleRenderer
     {
+        public static Random rnd = new Random();
+
         public bool Draw(SKCanvas canvas, IReadOnlyViewport viewport, ILayer layer, IFeature feature, IStyle style, ISymbolCache symbolCache)
         {
             var vectorTile = ((DrawableTile)feature.Geometry).Data;
@@ -40,13 +42,15 @@ namespace Mapsui.Samples.Forms
                 var scale = Math.Max(destination.Width, destination.Height) / vectorTile.Bounds.Width;
                 vectorTile.Context.Scale = 1f / scale;
 
+                //canvas.ClipRect(canvas.DeviceClipBounds); 
+
                 canvas.Translate(new SKPoint(destination.Left, destination.Top));
                 canvas.Scale(scale, scale);
-                //canvas.ClipRect(new SKRect(0, 0, vectorTile.Bounds.Width * scale, vectorTile.Bounds.Height * scale));
+                canvas.ClipRect(new SKRect(0, 0, vectorTile.Bounds.Width, vectorTile.Bounds.Height));
                 canvas.DrawDrawable(vectorTile, 0, 0);
                 
-                //var frame = SKRect.Inflate(vectorTile.Bounds, -1, -1);
-                //canvas.DrawRect(frame, new SKPaint() { Style = SKPaintStyle.Stroke, Color = SKColors.Red });
+                var frame = SKRect.Inflate(vectorTile.Bounds, (float)-vectorTile.Context.Zoom, (float)-vectorTile.Context.Zoom);
+                canvas.DrawRect(frame, new SKPaint() { Style = SKPaintStyle.Stroke, Color = new SKColor((byte)rnd.Next(0,256), (byte)rnd.Next(0, 256), (byte)rnd.Next(0, 256)) });
 			}
 
             return true;

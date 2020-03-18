@@ -6,11 +6,16 @@ namespace VectorTiles.MapboxGL
     public class MGLPaint : IVectorPaint
     {
         SKPaint paint = new SKPaint() { IsAntialias = true };  // Set this bei default
+        SKPaint lastPaint;
+        EvaluationContext lastContext;
         float strokeWidth;
         SKMatrix matrix = SKMatrix.MakeIdentity();
 
         public SKPaint CreatePaint(EvaluationContext context)
         {
+            if (context.Equals(lastContext))
+                return lastPaint;
+
             if (variableColor || variableOpacity)
             {
                 var c = variableColor ? funcColor(context) : color;
@@ -72,6 +77,9 @@ namespace VectorTiles.MapboxGL
                     array[i] = fixDashArray[i] * paint.StrokeWidth;
                 paint.PathEffect = SKPathEffect.CreateDash(array, 0);
             }
+
+            lastContext = new EvaluationContext(context.Zoom, context.Scale, context.Tags);
+            lastPaint = paint;
 
             return paint;
         }

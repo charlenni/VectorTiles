@@ -1,6 +1,8 @@
 ﻿using Mapsui.Fetcher;
 using Mapsui.Layers;
 using Mapsui.Projection;
+using Mapsui.Rendering;
+using Mapsui.UI;
 using Mapsui.Utilities;
 using Mapsui.Widgets.ScaleBar;
 using System;
@@ -58,8 +60,9 @@ namespace Mapsui.Samples.Forms
                 CRS = "EPSG:3857",
                 Transformation = new MinimalTransformation()
             };
-            map.Widgets.Add(new ScaleBarWidget(map) { TextAlignment = Widgets.Alignment.Center, HorizontalAlignment = Widgets.HorizontalAlignment.Left, VerticalAlignment = Widgets.VerticalAlignment.Bottom, MarginY = 20 });
+            //map.Widgets.Add(new ScaleBarWidget(map) { TextAlignment = Widgets.Alignment.Center, HorizontalAlignment = Widgets.HorizontalAlignment.Left, VerticalAlignment = Widgets.VerticalAlignment.Bottom, MarginY = 20 });
             map.RotationLock = true;
+            ((ViewportLimiter)map.Limiter).ZoomMode = ZoomMode.Unlimited;
 
             mapView.Map = map;
             mapView.MyLocationLayer.Enabled = false;
@@ -91,6 +94,15 @@ namespace Mapsui.Samples.Forms
                     layer.Style = new DrawableTileStyle();
                     map.Layers.Add(layer);
                 }
+
+                if (tileSource is MGLRasterTileSource)
+                {
+                    var layer = new TileLayer(tileSource, fetchStrategy: new FetchStrategy(3), fetchToFeature: DrawableTile.DrawableTileToFeature, fetchGetTile: tileSource.GetDrawable);
+                    layer.MinVisible = tileSource.Schema.Resolutions.Last().Value.UnitsPerPixel;
+                    layer.MaxVisible = tileSource.Schema.Resolutions.First().Value.UnitsPerPixel;
+                    layer.Style = new DrawableTileStyle();
+                    map.Layers.Add(layer);
+                }
             }
 
             map.Home = n => n.NavigateTo(new Geometries.Point(825650.0, 5423050.0).BoundingBox);
@@ -100,17 +112,25 @@ namespace Mapsui.Samples.Forms
 
             btnZoomIn.Clicked += (s, e) =>
             {
-                ((AnimatedNavigator)mapView.Navigator).ZoomIn();
+                if (mapView.Navigator is AnimatedNavigator animatedNavi)
+                    animatedNavi.ZoomIn();
+                else
+                    mapView.Navigator.ZoomIn();
+                mapView.Navigator.ZoomIn();
             };
 
             btnZoomOut.Clicked += (s, e) =>
             {
-                ((AnimatedNavigator)mapView.Navigator).ZoomOut();
+                if (mapView.Navigator is AnimatedNavigator animatedNavi)
+                    animatedNavi.ZoomOut();
+                else
+                    mapView.Navigator.ZoomOut();
             };
 
             btnFlight.Clicked += (s, e) =>
             {
-                ((AnimatedNavigator)mapView.Navigator).FlyTo(new Geometries.Point(825650.0, 5423050.0), 2.ToResolution(), 5000);
+                if (mapView.Navigator is AnimatedNavigator animatedNavi)
+                    animatedNavi.FlyTo(new Geometries.Point(825650.0, 5423050.0), 2.ToResolution(), 10000);
             };
         }
 

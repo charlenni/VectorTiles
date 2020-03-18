@@ -228,8 +228,8 @@ namespace VectorTiles.MapboxGL
 
             var vectorTileSource = new MGLVectorTileSource(name, tileSource)
             {
-                MinVisible = (jsonSource?.ZoomMax ?? 30).ToResolution(),
-                MaxVisible = (jsonSource?.ZoomMin ?? 0).ToResolution(),
+                //MinVisible = (jsonSource?.ZoomMax ?? 30).ToResolution(),
+                //MaxVisible = (jsonSource?.ZoomMin ?? 0).ToResolution(),
                 TileSize = (int)jsonSource?.TileSize,
             };
 
@@ -275,11 +275,12 @@ namespace VectorTiles.MapboxGL
                 if (!File.Exists(filename))
                     return null;
                 tileSource = new MbTilesTileSource(new SQLiteConnectionString(filename, false),
-                    new GlobalSphericalMercator(
-                        source.Scheme == "tms" ? YAxis.TMS : YAxis.OSM,
-                        minZoomLevel: source.ZoomMin ?? 0,
-                        maxZoomLevel: source.ZoomMax ?? 30
-                    ));
+                    //new GlobalSphericalMercator(
+                    //    source.Scheme == "tms" ? YAxis.TMS : YAxis.OSM,
+                    //    minZoomLevel: source.ZoomMin ?? 0,
+                    //    maxZoomLevel: source.ZoomMax ?? 30)
+                    null
+                    );
             }
 
             return tileSource;
