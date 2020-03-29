@@ -6,7 +6,7 @@ using VectorTiles.MapboxGL.Pbf;
 
 namespace VectorTiles.MapboxGL.Parser
 {
-    public static class VectorTileParser
+    public class MGLTileParser : ITileDataParser
     {
         /// <summary>
         /// Parses a unzipped tile in Mapbox format
@@ -14,30 +14,28 @@ namespace VectorTiles.MapboxGL.Parser
         /// <param name="tileInfo">TileInfo of this tile</param>
         /// <param name="stream">Stream containing tile data in Pbf format</param>
         /// <param name="scale">Factor for scaling of coordinates because of overzooming</param>
-        /// <param name="offsetX">Offset in X direction because of overzooming</param>
+        /// <param name="overzoom">Offset in X direction because of overzooming</param>
         /// <param name="offsetY">Offset in Y direction because of overzooming</param>
         /// <returns>List of VectorTileLayers, which contain Name and VectorTilesFeatures of each layer, this tile containing</returns>
-        public static IList<VectorTileFeature> Parse(TileInfo tileInfo, Stream stream, Overzoom overzoom, float scale)
+        public void Parse(TileInfo tileInfo, Stream stream, ITileDataSink sink, Overzoom overzoom, TileClipper clipper = null)
         {
             // Get tile information from Pbf format
             var tile = Serializer.Deserialize<Tile>(stream);
 
-            // Create new vector tile layer
-            var features = new List<VectorTileFeature>();
+            VectorElement vectorElement = new VectorElement(clipper);
 
             foreach (var layer in tile.Layers)
             {
-                // Convert all features from Mapbox format into Mapsui format
+                // Convert all features
                 foreach (var feature in layer.Features)
                 {
-                    var vectorTileFeature = FeatureParser.Parse(tileInfo, layer.Name, feature, layer.Keys, layer.Values, layer.Extent, overzoom, scale);
+                    FeatureParser.Parse(vectorElement, tileInfo, layer.Name, feature, layer.Keys, layer.Values, layer.Extent, overzoom);
 
-                    // Add to layer
-                    features.Add(vectorTileFeature);
+                    sink.Process(vectorElement);
                 }
             }
 
-            return features;
+            sink.Completed(Enums.QueryResult.Succes);
         }
     }
 }

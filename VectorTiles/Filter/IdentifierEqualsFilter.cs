@@ -9,7 +9,7 @@
             Identifier = identifier;
         }
 
-        public override bool Evaluate(VectorTileFeature feature)
+        public override bool Evaluate(VectorElement feature)
         {
             return feature != null && feature.Id == Identifier;
         }

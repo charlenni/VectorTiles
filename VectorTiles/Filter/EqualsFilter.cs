@@ -11,7 +11,7 @@
             Value = value;
         }
         
-        public override bool Evaluate(VectorTileFeature feature)
+        public override bool Evaluate(VectorElement feature)
         {
             return feature != null && feature.Tags.ContainsKeyValue(Key, Value);
         }

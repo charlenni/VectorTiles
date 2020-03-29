@@ -1,10 +1,10 @@
-﻿using NetTopologySuite.Geometries;
-using SkiaSharp;
-using System;
+﻿using SkiaSharp;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using VectorTiles.MapboxGL.Extensions;
 using VectorTiles.MapboxGL.Json;
+
+using Rect = SkiaSharp.SKRect;
 
 namespace VectorTiles.MapboxGL.Converter
 {
@@ -514,7 +514,7 @@ namespace VectorTiles.MapboxGL.Converter
                 return MGLSymbolStyler.Default;
             }
 
-            MGLSymbolStyler symbolStyler = new MGLSymbolStyler();
+            MGLSymbolStyler symbolStyler = new MGLSymbolStyler(spriteAtlas);
 
             // icon-allow-overlap
             //   Optional boolean. Defaults to false. Requires icon-image. Interval.
@@ -580,7 +580,7 @@ namespace VectorTiles.MapboxGL.Converter
             if (layout?.IconImage != null)
             {
                 // TODO: Get the right list (see https://docs.mapbox.com/mapbox-gl-js/style-spec/types/#resolvedimage)
-//                symbolStyler.IconImage = layout.IconImage;
+                symbolStyler.IconImage = layout.IconImage;
             }
 
             // icon-keep-upright

@@ -39,5 +39,10 @@ namespace VectorTiles
         /// Paint to use to draw the features
         /// </summary>
         IEnumerable<IVectorPaint> Paints { get; }
+
+        /// <summary>
+        /// Symbol styler to use for creating symbols
+        /// </summary>
+        IVectorSymbolStyler SymbolStyler { get; }
     }
 }

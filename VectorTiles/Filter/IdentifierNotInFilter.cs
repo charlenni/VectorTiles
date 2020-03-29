@@ -14,7 +14,7 @@ namespace VectorTiles.Filter
                 Identifiers.Add(identifier);
         }
 
-        public override bool Evaluate(VectorTileFeature feature)
+        public override bool Evaluate(VectorElement feature)
         {
             if (feature == null)
                 return true;

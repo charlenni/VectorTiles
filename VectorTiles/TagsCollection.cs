@@ -6,9 +6,12 @@ namespace VectorTiles
     /// <summary>
     /// Represents a simple tags collection based on a dictionary.
     /// </summary>
-    public class TagsCollection : Dictionary<string, object>
+    public class TagsCollection
     {
         private const char KeyValueSeparator = '=';
+
+        private List<string> keys = new List<string>();
+        private List<object> values = new List<object>();
 
         /// <summary>
         /// Creates a new tags collection.
@@ -45,6 +48,45 @@ namespace VectorTiles
         }
 
         /// <summary>
+        /// Number of elements in this tags collection
+        /// </summary>
+        public int Count { get => keys.Count; }
+
+        public object this[string key]
+        {
+            get
+            {
+                int index = keys.IndexOf(key);
+                if (index < 0)
+                    return null;
+                return values[index];
+            }
+            set
+            {
+                Add(key, value);
+            }
+        }
+
+        public IEnumerable<KeyValuePair<string, object>> KeyValues
+        {
+            get
+            {
+                var result = new List<KeyValuePair<string, object>>(Count);
+
+                for (int i = 0; i < keys.Count; i++)
+                    result.Add(new KeyValuePair<string, object>(keys[i], values[i]));
+
+                return result;
+            }
+        }
+
+        public void Clear()
+        {
+            keys.Clear();
+            values.Clear();
+        }
+
+        /// <summary>
         /// Adds a tag from a string with key-value-separator
         /// </summary>
         /// <param name="tag">String of key-value-pair separated with key-value-separator</param>
@@ -61,8 +103,48 @@ namespace VectorTiles
         /// <param name="tags">List of tags</param>
         public void Add(IEnumerable<KeyValuePair<string, object>> tags)
         {
-            foreach(var tag in tags)
+            foreach (var tag in tags)
                 Add(tag.Key, tag.Value);
+        }
+
+        /// <summary>
+        /// Adds a list of tags to this collection.
+        /// </summary>
+        /// <param name="tags">List of tags</param>
+        public void Add(TagsCollection tags)
+        {
+            foreach (var tag in tags.KeyValues)
+                Add(tag.Key, tag.Value);
+        }
+
+        /// <summary>
+        /// Add a key value pair to the TagsCollection
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        public void Add(string key, object value)
+        {
+            int index = keys.IndexOf(key);
+
+            if (index < 0)
+            {
+                keys.Add(key);
+                values.Add(value);
+            }
+            else
+            {
+                values[index] = value;
+            }
+        }
+
+        /// <summary>
+        /// Returns true, if the tags collection contains given key
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public bool ContainsKey(string key)
+        {
+            return keys.Contains(key);
         }
 
         /// <summary>
@@ -73,10 +155,12 @@ namespace VectorTiles
         /// <returns></returns>
         public bool ContainsKeyValue(string key, object value)
         {
-            if (TryGetValue(key, out object val))
-                return val.Equals(value);
+            int index = keys.IndexOf(key);
 
-            return false;
+            if (index < 0 || values[index] == null)
+                return false;
+
+            return values[index].Equals(value);
         }
 
         /// <summary>
@@ -84,11 +168,11 @@ namespace VectorTiles
         /// </summary>
         /// <param name="keys">Collection of keys to check</param>
         /// <returns>True, if one key in keys is containd in this collection</returns>
-        public virtual bool ContainsOneOfKeys(ICollection<string> keys)
+        public virtual bool ContainsOneOfKeys(ICollection<string> others)
         {
-            foreach (var tag in this)
+            foreach (var other in others)
             {
-                if (keys.Contains(tag.Key))
+                if (keys.Contains(other))
                 {
                     return true;
                 }
@@ -106,7 +190,9 @@ namespace VectorTiles
         {
             if (ContainsKeyValue(key, value))
             {
-                Remove(key);
+                int index = keys.IndexOf(key);
+                keys.RemoveAt(index);
+                values.RemoveAt(index);
                 return true;
             }
 
@@ -123,11 +209,11 @@ namespace VectorTiles
             if (other == this)
                 return true;
 
-            if (!(other is TagsCollection otherTagsCollection) || otherTagsCollection.Count != Count)
+            if (!(other is TagsCollection otherTagsCollection) || otherTagsCollection.Count != keys.Count)
                 return false;
 
-            foreach (var tag in otherTagsCollection)
-                if (!ContainsKeyValue(tag.Key, tag.Value))
+            for (int i = 0; i < keys.Count; i++)
+                if (!otherTagsCollection.ContainsKeyValue(keys[i], values[i]))
                     return false;
 
             return true;
@@ -140,9 +226,9 @@ namespace VectorTiles
         public override string ToString()
         {
             StringBuilder tags = new StringBuilder();
-            foreach (var tag in this)
+            for (int i = 0; i < keys.Count; i++)
             {
-                tags.Append($"{tag.Key}{KeyValueSeparator}{tag.Value}");
+                tags.Append($"{keys[i]}{KeyValueSeparator}{values[i]}");
                 tags.Append(',');
             }
             if (tags.Length > 0)

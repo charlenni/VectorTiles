@@ -21,42 +21,46 @@ namespace Mapsui.Samples.Forms
             vectorTile.Context.Zoom = (float)viewport.Resolution.ToZoomLevel();
 
 			var boundingBox = feature.Geometry.BoundingBox;
+            var destination = RoundToPixel(WorldToScreen(viewport, feature.Geometry.BoundingBox)).ToSkia();
+            var scale = Math.Max(destination.Width, destination.Height) / vectorTile.Bounds.Width;
 
-			if (viewport.IsRotated)
+            vectorTile.Context.Scale = 1f / scale;
+
+            if (viewport.IsRotated)
 			{
-				var priorMatrix = canvas.TotalMatrix;
+                canvas.Translate(new SKPoint(destination.Left + destination.Width / 2, destination.Top + destination.Height / 2));
+                canvas.RotateDegrees((float)viewport.Rotation);
+                canvas.Translate(new SKPoint(-destination.Width / 2, -destination.Height / 2));
+                canvas.Scale(scale, scale);
+                ////canvas.ClipRect(SKRect.Intersect(canvas.LocalClipBounds, new SKRect(0, 0, vectorTile.Bounds.Width, vectorTile.Bounds.Height)));
 
-				var matrix = CreateRotationMatrix(viewport, boundingBox, priorMatrix);
-                // TODO
-				canvas.SetMatrix(matrix);
+                canvas.DrawDrawable(vectorTile, 0, 0);
+                //            var priorMatrix = canvas.TotalMatrix;
 
-				var destination = new BoundingBox(0.0, 0.0, boundingBox.Width, boundingBox.Height).ToSkia();
+                //            var matrix = CreateRotationMatrix(scale, viewport, boundingBox, priorMatrix);
 
-				canvas.DrawDrawable(vectorTile, destination.Left, destination.Top);
-			}
-			else
+                //            canvas.SetMatrix(matrix);
+
+                //canvas.DrawDrawable(vectorTile, destination.Left, destination.Top);
+            }
+            else
 			{
-                var destination = RoundToPixel(WorldToScreen(viewport, feature.Geometry.BoundingBox)).ToSkia();
-                //var clipRect = vectorTile.Bounds;
-
-                var scale = Math.Max(destination.Width, destination.Height) / vectorTile.Bounds.Width;
-                vectorTile.Context.Scale = 1f / scale;
-
-                //canvas.ClipRect(canvas.DeviceClipBounds); 
-
                 canvas.Translate(new SKPoint(destination.Left, destination.Top));
                 canvas.Scale(scale, scale);
-                canvas.ClipRect(new SKRect(0, 0, vectorTile.Bounds.Width, vectorTile.Bounds.Height));
+                canvas.ClipRect(SKRect.Intersect(canvas.LocalClipBounds, new SKRect(0, 0, vectorTile.Bounds.Width, vectorTile.Bounds.Height)));
+                
                 canvas.DrawDrawable(vectorTile, 0, 0);
                 
-                var frame = SKRect.Inflate(vectorTile.Bounds, (float)-vectorTile.Context.Zoom, (float)-vectorTile.Context.Zoom);
-                canvas.DrawRect(frame, new SKPaint() { Style = SKPaintStyle.Stroke, Color = new SKColor((byte)rnd.Next(0,256), (byte)rnd.Next(0, 256), (byte)rnd.Next(0, 256)) });
-			}
+                //var frame = SKRect.Inflate(vectorTile.Bounds, (float)-vectorTile.Context.Zoom, (float)-vectorTile.Context.Zoom);
+                //canvas.DrawRect(frame, new SKPaint() { Style = SKPaintStyle.Stroke, Color = new SKColor((byte)rnd.Next(0,256), (byte)rnd.Next(0, 256), (byte)rnd.Next(0, 256)) });
+                //canvas.DrawRect(0,0,255,255, new SKPaint() { Style = SKPaintStyle.Stroke, Color = new SKColor((byte)rnd.Next(0, 256), (byte)rnd.Next(0, 256), (byte)rnd.Next(0, 256)) });
+                //canvas.DrawRect(257, 257, 255, 255, new SKPaint() { Style = SKPaintStyle.Stroke, Color = new SKColor((byte)rnd.Next(0, 256), (byte)rnd.Next(0, 256), (byte)rnd.Next(0, 256)) });
+            }
 
             return true;
         }
 
-        private static SKMatrix CreateRotationMatrix(IReadOnlyViewport viewport, BoundingBox boundingBox, SKMatrix priorMatrix)
+        private static SKMatrix CreateRotationMatrix(float scale, IReadOnlyViewport viewport, BoundingBox boundingBox, SKMatrix priorMatrix)
         {
             SKMatrix matrix = SKMatrix.MakeIdentity();
 
@@ -70,7 +74,8 @@ namespace Mapsui.Samples.Forms
             var focalPointOffset = SKMatrix.MakeTranslation(
                 (float)(boundingBox.Left - viewport.Center.X),
                 (float)(viewport.Center.Y - boundingBox.Top));
-            var zoomScale = SKMatrix.MakeScale((float)(1.0 / viewport.Resolution), (float)(1.0 / viewport.Resolution));
+//            var zoomScale = SKMatrix.MakeScale((float)(1.0 / viewport.Resolution), (float)(1.0 / viewport.Resolution));
+            var zoomScale = SKMatrix.MakeScale((float)scale, (float)scale);
             var centerInScreen = SKMatrix.MakeTranslation((float)(viewport.Width / 2.0), (float)(viewport.Height / 2.0));
 
             // We'll concatenate them like so: incomingMatrix * centerInScreen * userRotation * zoomScale * focalPointOffset

@@ -2,6 +2,6 @@
 {
     public interface IFilter
     {
-        bool Evaluate(VectorTileFeature feature);
+        bool Evaluate(VectorElement feature);
     }
 }

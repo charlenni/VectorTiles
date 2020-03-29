@@ -2,7 +2,7 @@
 {
     public class ExpressionFilter : Filter
     {
-        public override bool Evaluate(VectorTileFeature feature)
+        public override bool Evaluate(VectorElement feature)
         {
             return false;
         }

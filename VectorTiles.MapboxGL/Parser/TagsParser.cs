@@ -1,62 +1,33 @@
-﻿using VectorTiles.MapboxGL.Extensions;
-using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using VectorTiles.MapboxGL.Pbf;
 
 namespace VectorTiles.MapboxGL.Parser
 {
     public static class TagsParser
     {
-        public static TagsCollection Parse(List<string> keys, List<Value> values, List<uint> tags)
+        public static void Parse(VectorElement element, List<string> keys, List<Value> values, List<uint> tags)
         {
-            var result = new TagsCollection();
-            var odds = tags.GetOdds().ToList();
-            var evens = tags.GetEvens().ToList();
-
-            for (var i = 0; i < evens.Count; i++)
+            for (var i = 0; i < tags.Count; i += 2)
             {
-                var key = keys[(int)evens[i]];
-                var val = values[(int)odds[i]];
-                var valObject = GetAttr(val);
-                result.Add(key, new JValue(valObject));
+                var key = keys[(int)tags[i]];
+                var val = values[(int)tags[i+1]];
+                if (val.HasBoolValue)
+                    element.Tags.Add(key, val.BoolValue);
+                else if (val.HasDoubleValue)
+                    element.Tags.Add(key, val.DoubleValue);
+                else if (val.HasFloatValue)
+                    element.Tags.Add(key, val.FloatValue);
+                else if (val.HasIntValue)
+                    element.Tags.Add(key, val.IntValue);
+                else if (val.HasSIntValue)
+                    element.Tags.Add(key, val.SintValue);
+                else if (val.HasUIntValue)
+                    element.Tags.Add(key, val.UintValue);
+                else if (val.HasStringValue)
+                    element.Tags.Add(key, val.StringValue);
+                else
+                    throw new System.ArgumentException($"Unknown value for tag key {key}");
             }
-            return result;
-        }
-
-        private static object GetAttr(Value value)
-        {
-            object res = null;
-
-            if (value.HasBoolValue)
-            {
-                res = value.BoolValue;
-            }
-            else if (value.HasDoubleValue)
-            {
-                res = value.DoubleValue;
-            }
-            else if (value.HasFloatValue)
-            {
-                res = value.FloatValue;
-            }
-            else if (value.HasIntValue)
-            {
-                res = value.IntValue;
-            }
-            else if (value.HasStringValue)
-            {
-                res = value.StringValue;
-            }
-            else if (value.HasSIntValue)
-            {
-                res = value.SintValue;
-            }
-            else if (value.HasUIntValue)
-            {
-                res = value.UintValue;
-            }
-            return res;
         }
     }
 }

@@ -1,13 +1,16 @@
 ﻿using BruTile;
-using NetTopologySuite.Geometries;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using VectorTiles.MapboxGL.Pbf;
+
+using Point = SkiaSharp.SKPoint;
 
 namespace VectorTiles.MapboxGL.Parser
 {
     public static class FeatureParser
     {
+        //public static VectorElement element = new VectorElement();
+
         /// <summary>
         /// Converts a Mapbox feature in Mapbox coordinates into a VectorTileFeature
         /// </summary>
@@ -21,11 +24,14 @@ namespace VectorTiles.MapboxGL.Parser
         /// <param name="offsetX">Offset in X direction because of overzooming</param>
         /// <param name="offsetY">Offset in Y direction because of overzooming</param>
         /// <returns></returns>
-        public static VectorTileFeature Parse(TileInfo tileInfo, string layerName, Feature feature, List<string> keys, List<Value> values, uint extent, Overzoom overzoom, float scale)
+        public static VectorElement Parse(VectorElement element, TileInfo tileInfo, string layerName, Feature feature, List<string> keys, List<Value> values, uint extent, Overzoom overzoom)
         {
-            var vtf = new VectorTileFeature(layerName, feature.Id.ToString());
+            element.Clear();
 
-            var geometries =  GeometryParser.ParseGeometry(feature.Geometry, feature.Type, overzoom, scale);
+            element.Layer = layerName;
+            element.Id = feature.Id.ToString();
+
+            var geometries =  GeometryParser.ParseGeometry(feature.Geometry, feature.Type, overzoom);
 
             int i;
 
@@ -34,97 +40,58 @@ namespace VectorTiles.MapboxGL.Parser
             {
                 case GeomType.Point:
                     // Convert all Points
-                    if (geometries.Count == 1)
-                    {
-                        // Single point
-                        vtf.Geometry = new Point(geometries[0][0]);
-                    }
-                    else
-                    {
-                        // Multi point
-                        var multiPoints = new List<Point>();
-                        foreach (var points in geometries)
-                        {
-                            foreach (var point in points)
-                            {
-                                multiPoints.Add(new Point(point));
-                            }
-                        }
-                        vtf.Geometry = new MultiPoint(multiPoints.ToArray());
-                    }
+                    element.StartPoint();
+                    element.Add(geometries[0]);
                     break;
                 case GeomType.LineString:
                     // Convert all LineStrings
-                    if (geometries.Count == 1)
+                    foreach (var linePoints in geometries)
                     {
-                        // Single line
-                        vtf.Geometry = new LineString(geometries[0].ToArray());
-                    }
-                    else
-                    {
-                        // Multi line
-                        var multiLines = new LineString[geometries.Count];
-                        for (i = 0; i < geometries.Count; i++)
-                        {
-                            multiLines[i] = new LineString(geometries[i].ToArray());
-                        }
-                        vtf.Geometry = new MultiLineString(multiLines);
+                        element.StartLine();
+                        element.Add(linePoints);
                     }
                     break;
                 case GeomType.Polygon:
                     // Convert all Polygons
-                    var polygons = new List<Polygon>();
-
-                    LinearRing polygon = null;
-                    List<LinearRing> holes = new List<LinearRing>();
-
-                    i = 0;
-                    do
+                    for (i = 0; i < geometries.Count; i++)
                     {
-                        // Check, if first and last are the same points
-                        if (!geometries[i].First().Equals(geometries[i].Last()))
-                            geometries[i].Add(geometries[i].First());
-
-                        // Convert all points of this ring
-                        var ring = new LinearRing(geometries[i].ToArray());
-
-                        // We must use CCW instead of CW, because y axis is oriented from up to down.
-                        if (ring.IsCCW && polygon != null)
+                        if (ShoelaceArea(geometries[i]) >= 0)
                         {
-                            holes.Add(ring);
+                            element.StartPolygon();
+                            element.Add(geometries[i]);
                         }
                         else
                         {
-                            if (polygon != null)
-                            {
-                                polygons.Add(new Polygon(polygon, holes.ToArray()));
-                            }
-                            polygon = ring;
-                            holes.Clear();
+                            element.StartHole();
+                            element.Add(geometries[i]);
                         }
-
-                        i++;
-                    } while (i < geometries.Count);
-
-                    // Save last one
-                    polygons.Add(new Polygon(polygon, holes.ToArray()));
-
-                    // Now save correct geometry
-                    if (polygons.Count == 1)
-                    {
-                        vtf.Geometry = polygons[0];
-                    }
-                    else
-                    {
-                        vtf.Geometry = new MultiPolygon(polygons.ToArray());
                     }
                     break;
             }
 
             // now add the tags
-            vtf.Tags.Add(TagsParser.Parse(keys, values, feature.Tags));
+            TagsParser.Parse(element, keys, values, feature.Tags);
 
-            return vtf;
+            return element;
+        }
+
+        /// <summary>
+        /// Function to calculate the area of a polygon. If it is CW then area is positive, if CCW then negative
+        /// Found at: https://rosettacode.org/wiki/Shoelace_formula_for_polygonal_area#C.23
+        /// </summary>
+        /// <param name="v"></param>
+        /// <returns></returns>
+        static double ShoelaceArea(List<Point> v)
+        {
+            int len = v.Count;
+            double a = 0.0;
+
+            for (int i = 0; i < len - 1; i++)
+            {
+                a += v[i].X * v[i + 1].Y - v[i + 1].X * v[i].Y;
+            }
+
+            return Math.Abs(a + v[len - 1].X * v[0].Y - v[0].X * v[len - 1].Y) / 2.0;
         }
     }
 }

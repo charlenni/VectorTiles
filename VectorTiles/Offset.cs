@@ -9,7 +9,7 @@ namespace VectorTiles
         public Offset() : base(0, 0)
         { }
 
-        public Offset(double x, double y) : base(x, y)
+        public Offset(float x, float y) : base(x, y)
         { }
     }
 }

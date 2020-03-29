@@ -57,7 +57,7 @@ namespace VectorTiles.MapboxGL.Converter
             if (value != null && value.Type != JTokenType.Boolean && value.Type != JTokenType.Float && value.Type != JTokenType.Integer && value.Type != JTokenType.String)
                 throw new ArgumentException("Filter expression value must be a bool, float or string");
 
-            return value;
+            return value.Value;
         }
 
         public static GeometryType ToGeometryType(JValue value)
@@ -148,9 +148,9 @@ namespace VectorTiles.MapboxGL.Converter
                     return null;
 
                 if (invert)
-                    return new NotEqualsFilter(key, filterValue);
+                    return new NotEqualsFilter(key, filterValue.Value);
                 else
-                    return new EqualsFilter(key, filterValue);
+                    return new EqualsFilter(key, filterValue.Value);
             }
         }
 
@@ -212,12 +212,12 @@ namespace VectorTiles.MapboxGL.Converter
             }
             else
             {
-                var filterList = new List<JValue>();
+                var filterList = new List<object>();
 
                 for (int i = 2; i < filter.Count; i++)
                 {
                     if (filter[i] is JValue value)
-                        filterList.Add(value);
+                        filterList.Add(value.Value);
                 }
 
                 if (invert)

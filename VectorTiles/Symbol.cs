@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using SkiaSharp;
 
 namespace VectorTiles
 {
-    public class Symbol : ISymbol
+    public abstract class Symbol : Drawable, ISymbol
     {
         /// <summary>
         /// Class of this symbol
@@ -26,5 +24,6 @@ namespace VectorTiles
         /// </summary>
         public int Rank { get; protected set; }
 
+        public abstract void OnDraw(SKCanvas canvas, EvaluationContext context);
     }
 }

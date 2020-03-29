@@ -1,5 +1,4 @@
 ﻿using SkiaSharp;
-using System;
 
 namespace VectorTiles
 {

@@ -58,17 +58,18 @@ namespace Mapsui.Samples.Forms
             var map = new Map
             {
                 CRS = "EPSG:3857",
-                Transformation = new MinimalTransformation()
+                Transformation = new MinimalTransformation(),
+                BackColor = new Mapsui.Styles.Color(239, 239, 239),
+                RotationLock = false,
+                Home = n => n.NavigateTo(new Geometries.Point(825650.0, 5423050.0).BoundingBox),
             };
             //map.Widgets.Add(new ScaleBarWidget(map) { TextAlignment = Widgets.Alignment.Center, HorizontalAlignment = Widgets.HorizontalAlignment.Left, VerticalAlignment = Widgets.VerticalAlignment.Bottom, MarginY = 20 });
-            map.RotationLock = true;
             ((ViewportLimiter)map.Limiter).ZoomMode = ZoomMode.Unlimited;
 
             mapView.Map = map;
             mapView.MyLocationLayer.Enabled = false;
-            mapView.Navigator = new AnimatedNavigator(map, (IViewport)mapView.Viewport);
+            //mapView.Navigator = new AnimatedNavigator(map, (IViewport)mapView.Viewport);
             mapView.Viewport.ViewportChanged += (s, args) => { Device.BeginInvokeOnMainThread(() => { lblInfo.Text = $"Zoom Level: {mapView.Viewport.Resolution.ToZoomLevel():0.0}"; }); };
-            mapView.Map.BackColor = new Mapsui.Styles.Color(239, 239, 239);
             mapView.UseDoubleTap = false;
 
 
@@ -86,9 +87,18 @@ namespace Mapsui.Samples.Forms
             // Ok, we have a valid style file, so get the tile sources, which contain the style file
             foreach (var tileSource in mglStyleFile.TileSources)
             {
+                if (tileSource is MGLBackgroundTileSource)
+                {
+                    var layer = new TileLayer(tileSource, fetchStrategy: new FetchStrategy(0), fetchToFeature: DrawableTile.DrawableTileToFeature, fetchGetTile: tileSource.GetVectorTile);
+                    layer.MinVisible = 30.ToResolution();
+                    layer.MaxVisible = 0.ToResolution();
+                    layer.Style = new DrawableTileStyle();
+                    map.Layers.Add(layer);
+                }
+
                 if (tileSource is MGLVectorTileSource)
                 {
-                    var layer = new TileLayer(tileSource, fetchStrategy: new FetchStrategy(30), fetchToFeature: DrawableTile.DrawableTileToFeature, fetchGetTile: tileSource.GetDrawable);
+                    var layer = new TileLayer(tileSource, fetchStrategy: new FetchStrategy(30), fetchToFeature: DrawableTile.DrawableTileToFeature, fetchGetTile: tileSource.GetVectorTile);
                     layer.MinVisible = 30.ToResolution();
                     layer.MaxVisible = 0.ToResolution();
                     layer.Style = new DrawableTileStyle();
@@ -97,7 +107,7 @@ namespace Mapsui.Samples.Forms
 
                 if (tileSource is MGLRasterTileSource)
                 {
-                    var layer = new TileLayer(tileSource, fetchStrategy: new FetchStrategy(3), fetchToFeature: DrawableTile.DrawableTileToFeature, fetchGetTile: tileSource.GetDrawable);
+                    var layer = new TileLayer(tileSource, fetchStrategy: new FetchStrategy(3), fetchToFeature: DrawableTile.DrawableTileToFeature, fetchGetTile: tileSource.GetVectorTile);
                     layer.MinVisible = tileSource.Schema.Resolutions.Last().Value.UnitsPerPixel;
                     layer.MaxVisible = tileSource.Schema.Resolutions.First().Value.UnitsPerPixel;
                     layer.Style = new DrawableTileStyle();
@@ -105,7 +115,6 @@ namespace Mapsui.Samples.Forms
                 }
             }
 
-            map.Home = n => n.NavigateTo(new Geometries.Point(825650.0, 5423050.0).BoundingBox);
             mapView.Navigator.NavigateTo(new Geometries.Point(825650.0, 5423050.0), 12.ToResolution());
 
             lblInfo.Text = "";

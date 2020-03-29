@@ -1,15 +1,31 @@
-﻿using NetTopologySuite.Geometries;
-using SkiaSharp;
+﻿using SkiaSharp;
+using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using VectorTiles.Enums;
 using VectorTiles.MapboxGL.Expressions;
 
+using Rect = SkiaSharp.SKRect;
+
 namespace VectorTiles.MapboxGL
 {
-    public class MGLSymbolStyler
+    public class MGLSymbolStyler : IVectorSymbolStyler
     {
+        static Regex regex = new Regex(@".*\{(.*)\}.*");
+
+        MGLSpriteAtlas spriteAtlas;
+
         public static MGLSymbolStyler Default;
-        
+
+        public MGLSymbolStyler(MGLSpriteAtlas atlas)
+        {
+            spriteAtlas = atlas;
+        }
+
+        public bool HasIcon { get => IconImage != null; }
+
+        public bool HasText { get => TextField != null && TextFont != null; }
+
         public bool IconAllowOverlap { get; internal set; }
 
         public Direction IconAnchor { get; internal set; }
@@ -119,5 +135,85 @@ namespace VectorTiles.MapboxGL
         public List<MapAlignment> TextVariableAnchor { get; internal set; } = new List<MapAlignment>();
 
         public List<Orientation> TextWritingMode { get; internal set; } = new List<Orientation>();
+
+        public Symbol CreateIconSymbol(SKPoint point, TagsCollection tags, EvaluationContext context)
+        {
+            if (IconImage == null)
+                return null;
+
+            var result = new MGLIconSymbol();
+
+            var iconName = ReplaceWithTags(IconImage.Evaluate(context.Zoom), tags, context);
+
+            if (!string.IsNullOrEmpty(iconName))
+            {
+                result.Image = spriteAtlas.GetSprite(iconName).Image;
+                result.ImagePoint = point;
+                result.Paint = new MGLPaint();
+            }
+
+            return result;
+        }
+
+        public Symbol CreateTextSymbol(SKPoint point, TagsCollection tags, EvaluationContext context)
+        {
+            if (TextField == null)
+                return null;
+
+            var result = new MGLTextSymbol();
+
+            var fieldName = ReplaceWithTags(TextField, tags, context);
+
+            return result;
+        }
+
+        public Symbol CreateIconTextSymbol(SKPoint point, TagsCollection tags, EvaluationContext context)
+        {
+            if (IconImage == null && TextField == null)
+                return null;
+
+            var result = new MGLIconTextSymbol();
+
+            var iconName = ReplaceWithTags(IconImage.Evaluate(context.Zoom), tags, context);
+            var fieldName = ReplaceWithTags(TextField, tags, context);
+
+            if (!string.IsNullOrEmpty(iconName))
+            {
+                result.Image = spriteAtlas.GetSprite(iconName)?.Image;
+                result.ImagePoint = point;
+                result.Paint = new MGLPaint();
+            }
+
+            return result;
+        }
+
+        public IEnumerable<Symbol> CreatePathSymbols(VectorElement element, EvaluationContext context)
+        {
+            return null;
+        }
+
+        private string ReplaceWithTags(string text, TagsCollection tags, EvaluationContext context)
+        {
+            var match = regex.Match(text);
+
+            if (!match.Success)
+                return text;
+
+            var val = match.Groups[1].Value;
+
+            if (tags.ContainsKey(val))
+                return text.Replace($"{{{val}}}", (string)tags[val]);
+
+            if (context.Tags != null && context.Tags.ContainsKey(val))
+                return text.Replace($"{{{val}}}", (string)context.Tags[val]);
+
+            // Check, if match starts with name
+            if (val.StartsWith("name"))
+            {
+                // TODO: Try to take the localized name    
+            }
+
+            return text;
+        }
     }
 }

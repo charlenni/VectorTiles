@@ -1,10 +1,13 @@
-﻿namespace VectorTiles.MapboxGL
+﻿using SkiaSharp;
+using Point = SkiaSharp.SKPoint;
+
+namespace VectorTiles.MapboxGL
 {
-    public class MGLSymbol : Symbol
+    public abstract class MGLSymbol : Symbol
     {
-        public MGLSymbol(VectorTileFeature feature, IVectorStyleLayer style)
+        public MGLSymbol(VectorElement feature, Point point, IVectorStyleLayer style)
         {
-            Feature = feature;
+            Point = point;
             Style = style;
 
             Class = feature.Tags.ContainsKey("class") ? feature.Tags["class"].ToString() : string.Empty;
@@ -12,8 +15,10 @@
             Rank = feature.Tags.ContainsKey("rank") ? int.Parse(feature.Tags["rank"].ToString()) : 0;
         }
 
-        public VectorTileFeature Feature { get; }
+        public Point Point { get; }
 
         public IVectorStyleLayer Style;
+
+        public abstract override void OnDraw(SKCanvas canvas, EvaluationContext context);
     }
 }

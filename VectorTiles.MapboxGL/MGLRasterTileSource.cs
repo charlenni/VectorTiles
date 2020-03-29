@@ -37,7 +37,7 @@ namespace VectorTiles.MapboxGL
             Source = source;
         }
 
-        Drawable IDrawableTileSource.GetDrawable(TileInfo ti)
+        Drawable IDrawableTileSource.GetVectorTile(TileInfo ti)
         {
             // Check Schema for TileInfo
             var tileInfo = Schema.YAxis == YAxis.OSM ? ti.ToTMS() : ti;

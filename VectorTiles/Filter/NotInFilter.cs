@@ -16,14 +16,19 @@ namespace VectorTiles.Filter
                 Values.Add(value);
         }
 
-        public override bool Evaluate(VectorTileFeature feature)
+        public override bool Evaluate(VectorElement feature)
         {
-            if (feature == null || !feature.Tags.ContainsKey(Key) || feature.Tags[Key] == null)
+            if (feature == null || !feature.Tags.ContainsKey(Key))
                 return true;
 
-            foreach (var value in Values)
+            var value = feature.Tags[Key];
+
+            if (value == null)
+                return true;
+
+            foreach (var val in Values)
             {
-                if (feature.Tags[Key].Equals(value))
+                if (val.Equals(value))
                     return false;
             }
 

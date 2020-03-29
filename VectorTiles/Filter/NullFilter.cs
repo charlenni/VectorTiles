@@ -2,7 +2,7 @@
 {
     public class NullFilter : Filter
     {
-        public override bool Evaluate(VectorTileFeature feature)
+        public override bool Evaluate(VectorElement feature)
         {
             return true;
         }

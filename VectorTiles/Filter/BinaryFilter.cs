@@ -15,6 +15,6 @@
             Value = value;
         }
 
-        public abstract override bool Evaluate(VectorTileFeature feature);
+        public abstract override bool Evaluate(VectorElement feature);
     }
 }

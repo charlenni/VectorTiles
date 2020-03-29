@@ -18,11 +18,9 @@ namespace VectorTiles.MapboxGL
 
         public string Name => "Background";
 
-        public Attribution Attribution => new Attribution();
+        public Attribution Attribution { get; } = new Attribution();
 
         public int TileSize { get; set; } = 256;
-
-        public EvaluationContext Context { get; set; }
 
         /// <summary>
         /// MGLPaint to use when drawing background
@@ -39,30 +37,25 @@ namespace VectorTiles.MapboxGL
                 Schema.Resolutions.Add(i.ToString(), new BruTile.Resolution(i.ToString(), i.ToResolution()));
         }
 
-        public Drawable GetDrawable(TileInfo tileInfo)
+        public Drawable GetVectorTile(TileInfo tileInfo)
         {
             return this;
         }
 
         public byte[] GetTile(TileInfo tileInfo)
         {
-            SKImage image;
-
-            // Create new image
-            var info = new SKImageInfo(TileSize, TileSize);
-            using (var surface = SKSurface.Create(info))
-            {
-                OnDraw(surface.Canvas);
-                image = surface.Snapshot();
-            }
-
-            return image.Encode(SKEncodedImageFormat.Png, 100).ToArray();
+            throw new System.NotImplementedException();
         }
 
         protected override void OnDraw(SKCanvas canvas)
         {
-            // All we have to do here is to clear canvas
-            canvas.DrawRect(new SKRect(0, 0, TileSize, TileSize), BackgroundPaint.CreatePaint(Context));
+            // All we have to do here is to clear canvas and, if there is one, draw the fill image
+            var paint = BackgroundPaint.CreatePaint(Context);
+
+            canvas.Clear(paint.Color);
+
+            if (paint.Shader != null)
+                canvas.DrawRect(OnGetBounds(), paint);
         }
 
         protected override SKRect OnGetBounds()

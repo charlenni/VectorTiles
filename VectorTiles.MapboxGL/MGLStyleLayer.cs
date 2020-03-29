@@ -19,7 +19,7 @@ namespace VectorTiles.MapboxGL
 
         public IEnumerable<IVectorPaint> Paints { get; internal set; } = new List<MGLPaint>();
 
-        public MGLSymbolStyler SymbolStyler { get; internal set; } = MGLSymbolStyler.Default;
+        public IVectorSymbolStyler SymbolStyler { get; internal set; } = MGLSymbolStyler.Default;
 
         public bool IsVisible { get; internal set; } = true;
 

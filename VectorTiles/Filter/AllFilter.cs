@@ -8,7 +8,7 @@ namespace VectorTiles.Filter
         {
         }
 
-        public override bool Evaluate(VectorTileFeature feature)
+        public override bool Evaluate(VectorElement feature)
         {
             foreach (var filter in Filters)
             {

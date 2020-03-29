@@ -1,6 +1,7 @@
-﻿using GeoAPI.Geometries;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using VectorTiles.MapboxGL.Pbf;
+
+using Point = SkiaSharp.SKPoint;
 
 namespace VectorTiles.MapboxGL.Parser
 {
@@ -15,7 +16,7 @@ namespace VectorTiles.MapboxGL.Parser
         /// <param name="offsetX">Offset in X direction because of overzooming</param>
         /// <param name="offsetY">Offset in Y direction because of overzooming</param>
         /// <returns>List of list of points in world coordinates</returns>
-        public static List<List<Coordinate>> ParseGeometry(List<uint> geom, GeomType geomType, Overzoom overzoom, float scale)
+        public static List<List<Point>> ParseGeometry(List<uint> geom, GeomType geomType, Overzoom overzoom)
         {
             const uint cmdMoveTo = 1;
             //const uint cmdLineTo = 2;
@@ -24,8 +25,8 @@ namespace VectorTiles.MapboxGL.Parser
 
             long x = 0;
             long y = 0;
-            var coordsList = new List<List<Coordinate>>();
-            List<Coordinate> coords = null;
+            var listOfPoints = new List<List<Point>>();
+            List<Point> points = null;
             var geometryCount = geom.Count;
             uint length = 0;
             uint command = 0;
@@ -36,23 +37,24 @@ namespace VectorTiles.MapboxGL.Parser
                 {
                     length = geom[i++];
                     command = length & ((1 << 3) - 1);
-                    length = length >> 3;
+                    length >>= 3;
                 }
 
                 if (length > 0)
                 {
                     if (command == cmdMoveTo)
                     {
-                        coords = new List<Coordinate>();
-                        coordsList.Add(coords);
+                        points = new List<Point>();
+                        listOfPoints.Add(points);
                     }
                 }
 
                 if (command == cmdSegEnd)
                 {
-                    if (geomType != GeomType.Point && coords?.Count != 0)
+                    if (geomType != GeomType.Point && points?.Count != 0)
                     {
-                        coords?.Add(coords[0]);
+                        // It is a polygon, so add first point as last point to close
+                        points?.Add(points[0]);
                     }
                     length--;
                     continue;
@@ -66,16 +68,20 @@ namespace VectorTiles.MapboxGL.Parser
                 var ldx = ZigZag.Decode(dx);
                 var ldy = ZigZag.Decode(dy);
 
-                x = x + ldx;
-                y = y + ldy;
+                x += ldx;
+                y += ldy;
 
                 // Correct coordinates for overzoom
-                var coord = new Coordinate((x * overzoom.Scale - overzoom.OffsetX) * scale, 
-                                           (y * overzoom.Scale - overzoom.OffsetY) * scale);
-
-                coords?.Add(coord);
+                if (overzoom != Overzoom.None)
+                {
+                    points?.Add(new Point(x * overzoom.Scale - overzoom.OffsetX, y * overzoom.Scale - overzoom.OffsetY));
+                }
+                else
+                {
+                    points?.Add(new Point(x, y));
+                }
             }
-            return coordsList;
+            return listOfPoints;
         }
     }
 }
