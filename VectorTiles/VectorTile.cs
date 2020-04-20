@@ -12,7 +12,6 @@ namespace VectorTiles
     /// </summary>
     public class VectorTile : Drawable, ITileDataSink
     {
-        List<IVectorStyleLayer> styleLayers;
         Rect clipRect;
         EvaluationContext context;
 
@@ -25,6 +24,8 @@ namespace VectorTiles
         ///  Tile size of this vector tile
         /// </summary>
         public int TileSize { get; }
+
+        public List<IVectorStyleLayer> StyleLayers { get; }
 
         public IBucket[] Buckets;
 
@@ -44,8 +45,8 @@ namespace VectorTiles
         {
             TileInfo = tileInfo;
             TileSize = tileSize;
-            styleLayers = styles;
-            Buckets = new IBucket[styleLayers.Count];
+            StyleLayers = styles;
+            Buckets = new IBucket[StyleLayers.Count];
             Zoom = zoom;
             Overzoom = overzoom;
 
@@ -60,9 +61,9 @@ namespace VectorTiles
             element.Scale(TileSize / 4096.0f);
 
             // Now process this element and check, for which style layers it is ok
-            for (int i = 0; i < styleLayers.Count; i++)
+            for (int i = 0; i < StyleLayers.Count; i++)
             {
-                style = styleLayers[i];
+                style = StyleLayers[i];
 
                 // Is this style relevant or is it outside the zoom range
                 if (!style.IsVisible || style.MinZoom > Zoom || style.MaxZoom < Zoom)
@@ -94,7 +95,7 @@ namespace VectorTiles
                     case StyleType.Fill:
                         // Element is a line or fill
                         if (Buckets[i] == null)
-                            Buckets[i] = new PathBucket(style.Paints, clipRect);
+                            Buckets[i] = new PathBucket(style.Paints);
                         if (element.IsLine || element.IsPolygon)
                             ((PathBucket)Buckets[i]).AddElement(element);
                         else
@@ -116,19 +117,10 @@ namespace VectorTiles
 
         protected override void OnDraw(SKCanvas canvas)
         {
-            // Do this, because of the different sizes of tiles (512 instead of 256) and overzoom
-            var context = new EvaluationContext(Context.Zoom)
-            {
-                Tags = Context.Tags,
-            };
-
             canvas.Save();
 
             var watch = new System.Diagnostics.Stopwatch();
             watch.Start();
-
-            var countPoint = 0;
-            var countPath = 0;
 
             foreach (var bucket in Buckets)
             {
@@ -137,7 +129,7 @@ namespace VectorTiles
             }
 
             watch.Stop();
-            System.Diagnostics.Debug.WriteLine($"Draw VectorTile: {watch.ElapsedMilliseconds}, PathCount: {countPath}, PointCount: {countPoint}");
+            System.Diagnostics.Debug.WriteLine($"Draw VectorTile ({TileInfo.Index.Level}/{TileInfo.Index.Col}/{TileInfo.Index.Row}): {watch.ElapsedMilliseconds}");
 
             canvas.Restore();
         }

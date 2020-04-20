@@ -237,6 +237,17 @@ namespace VectorTiles.MapboxGL
             if (vectorTileSource != null)
             {
                 vectorTileSource.StyleLayers.AddRange(ExtractStyles(vectorTileSource.Name, jsonStyle.StyleLayers, spriteAtlas));
+
+                float maxMinZoom = 0;
+
+                foreach (var styleLayer in vectorTileSource.StyleLayers)
+                {
+                    if (styleLayer.MinZoom > maxMinZoom)
+                        maxMinZoom = styleLayer.MinZoom;
+                }
+
+                if (vectorTileSource.MinVisible > maxMinZoom.ToResolution())
+                    vectorTileSource.MinVisible = maxMinZoom.ToResolution();
             }
 
             return vectorTileSource;
@@ -348,6 +359,11 @@ namespace VectorTiles.MapboxGL
                     case "heatmap":
                         break;
                     case "fill-extrusion":
+                        // TODO: 3D buildings
+                        styleLayer.Type = StyleType.Fill;
+                        var fillExPaints = StyleLayerConverter.ConvertFillLayer(jsonStyleLayer, spriteAtlas);
+                        if (fillExPaints != null)
+                            ((List<MGLPaint>)styleLayer.Paints).AddRange(fillExPaints);
                         break;
                     default:
                         throw new ArgumentException($"Unknown layer type ${jsonStyleLayer.Type}");

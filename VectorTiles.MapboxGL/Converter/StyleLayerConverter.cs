@@ -143,6 +143,8 @@ namespace VectorTiles.MapboxGL.Converter
             var layout = jsonStyleLayer?.Layout;
             var paint = jsonStyleLayer?.Paint;
 
+            var hasOutline = false;
+
             var area = new MGLPaint();
             var line = new MGLPaint();
 
@@ -180,21 +182,6 @@ namespace VectorTiles.MapboxGL.Converter
                 }
             }
 
-            // fill-outline-color
-            //   Optional color. Disabled by fill-pattern. Requires fill-antialias = true. Exponential. 
-            //   The outline color of the fill. Matches the value of fill-color if unspecified.
-            if (paint.FillOutlineColor != null && paint.FillAntialias != null)
-            {
-                if (paint.FillOutlineColor.Stops != null)
-                {
-                    line.SetVariableColor((context) => jsonStyleLayer.Paint.FillOutlineColor.Evaluate(context.Zoom));
-                }
-                else
-                {
-                    line.SetFixColor(jsonStyleLayer.Paint.FillOutlineColor.SingleVal);
-                }
-            }
-
             // fill-opacity
             //   Optional number. Defaults to 1. Exponential.
             //   The opacity of the entire fill layer. In contrast to the fill-color, this 
@@ -227,6 +214,22 @@ namespace VectorTiles.MapboxGL.Converter
                 {
                     area.SetFixAntialias(jsonStyleLayer.Paint.FillAntialias.SingleVal == null ? false : (bool)jsonStyleLayer.Paint.FillAntialias.SingleVal);
                     line.SetFixAntialias(jsonStyleLayer.Paint.FillAntialias.SingleVal == null ? false : (bool)jsonStyleLayer.Paint.FillAntialias.SingleVal);
+                }
+            }
+
+            // fill-outline-color
+            //   Optional color. Disabled by fill-pattern. Requires fill-antialias = true. Exponential. 
+            //   The outline color of the fill. Matches the value of fill-color if unspecified.
+            if (paint.FillOutlineColor != null)
+            {
+                hasOutline = true;
+                if (paint.FillOutlineColor.Stops != null)
+                {
+                    line.SetVariableColor((context) => jsonStyleLayer.Paint.FillOutlineColor.Evaluate(context.Zoom));
+                }
+                else
+                {
+                    line.SetFixColor(jsonStyleLayer.Paint.FillOutlineColor.SingleVal);
                 }
             }
 
@@ -294,7 +297,11 @@ namespace VectorTiles.MapboxGL.Converter
                 }
             }
 
-            return new List<MGLPaint>() { area, line };
+            // We only have to draw line around areas, when color is different from fill color
+            if (hasOutline)
+                return new List<MGLPaint>() { area, line };
+            else
+                return new List<MGLPaint>() { area };
         }
 
         public static List<MGLPaint> ConvertLineLayer(JsonStyleLayer jsonStyleLayer, MGLSpriteAtlas spriteAtlas)

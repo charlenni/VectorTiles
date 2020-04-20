@@ -1,6 +1,8 @@
-﻿namespace VectorTiles
+﻿using VectorTiles.RBush;
+
+namespace VectorTiles
 {
-    public interface ISymbol
+    public interface ISymbol : ISpatialData
     {
         /// <summary>
         /// Class of this symbol
@@ -21,5 +23,10 @@
         /// Rank of this symbol lower numbers are importanter
         /// </summary>
         int Rank { get; }
+
+        /// <summary>
+        /// Flag to show, if this symbol is visible or not
+        /// </summary>
+        bool IsVisible { get; }
     }
 }

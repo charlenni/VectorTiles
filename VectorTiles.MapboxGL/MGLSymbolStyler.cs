@@ -152,6 +152,8 @@ namespace VectorTiles.MapboxGL
                 result.Paint = new MGLPaint();
             }
 
+            result.OnCalcBoundings();
+
             return result;
         }
 

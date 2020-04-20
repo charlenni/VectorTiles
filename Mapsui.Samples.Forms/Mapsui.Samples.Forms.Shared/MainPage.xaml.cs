@@ -5,13 +5,17 @@ using Mapsui.Rendering;
 using Mapsui.UI;
 using Mapsui.Utilities;
 using Mapsui.Widgets.ScaleBar;
+using SkiaSharp;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using VectorTiles;
 using VectorTiles.MapboxGL;
 using VectorTiles.MapboxGL.Extensions;
+using VectorTiles.RBush;
 using Xamarin.Forms;
 
 namespace Mapsui.Samples.Forms
@@ -60,11 +64,11 @@ namespace Mapsui.Samples.Forms
                 CRS = "EPSG:3857",
                 Transformation = new MinimalTransformation(),
                 BackColor = new Mapsui.Styles.Color(239, 239, 239),
-                RotationLock = false,
+                RotationLock = true,
                 Home = n => n.NavigateTo(new Geometries.Point(825650.0, 5423050.0).BoundingBox),
             };
             //map.Widgets.Add(new ScaleBarWidget(map) { TextAlignment = Widgets.Alignment.Center, HorizontalAlignment = Widgets.HorizontalAlignment.Left, VerticalAlignment = Widgets.VerticalAlignment.Bottom, MarginY = 20 });
-            ((ViewportLimiter)map.Limiter).ZoomMode = ZoomMode.Unlimited;
+            ((ViewportLimiter)map.Limiter).ZoomMode = ZoomMode.Unlimited; //.ZoomLimits = new MinMax(0, 24); //
 
             mapView.Map = map;
             mapView.MyLocationLayer.Enabled = false;
@@ -102,17 +106,75 @@ namespace Mapsui.Samples.Forms
                     layer.MinVisible = 30.ToResolution();
                     layer.MaxVisible = 0.ToResolution();
                     layer.Style = new DrawableTileStyle();
+                    layer.DataChanged += (s, args) =>
+                    {
+                        if (layer.Busy)
+                            return;
+
+                        // TODO: All tiles are loaded, so create buckets for symbols
+                        var features = layer.GetFeaturesInView(mapView.Viewport.Extent, mapView.Viewport.Resolution);
+                        var tiles = features.Select(f => (VectorTile)((DrawableTile)f.Geometry).Data).ToArray();
+
+                        int numBuckets = 0;
+                        int numSymbols = 0;
+
+                        var symbols = new List<Symbol>();
+                        var rbush = new RBush<Symbol>();
+
+                        // Check symbols, if they are visible or not. For this,
+                        // we use the same layer for all tiles and set as much as
+                        // possible symbols to visible. Than we take the next
+                        // layer and begin the next check.
+                        for (int i = 0; i < tiles[0].Buckets.Length; i++)
+                        {
+                            if (tiles[0].StyleLayers[i].Type != StyleType.Symbol)
+                                continue;
+
+                            numBuckets++;
+
+                            symbols.Clear();
+
+                            foreach (var tile in tiles)
+                            {
+                                if (tile.Buckets[i] == null)
+                                    continue;
+
+                                symbols.AddRange(((SymbolBucket)tile.Buckets[i]).Symbols);
+
+                                numSymbols += ((SymbolBucket)tile.Buckets[i]).Symbols.Count;
+                            }
+
+                            if (symbols.Count == 0)
+                                continue;
+
+                            // Now we have all symbols of one style layer, that should be 
+                            // visible. So we could check, which symbol should be visible 
+                            // and which not.
+                            foreach (var symbol in symbols)
+                            {
+                                //if (symbol.Envelope != SKRect.Empty && rbush.Search(symbol.Envelope).Count == 0)
+                                {
+                                    symbol.IsVisible = true;
+                                    rbush.Insert(symbol);
+                                }
+                            }
+
+                            System.Diagnostics.Debug.WriteLine($"Found {numSymbols} symbols in {numBuckets} buckets of {tiles.Length} tiles");
+                        };
+
+                    };
+
                     map.Layers.Add(layer);
                 }
 
-                if (tileSource is MGLRasterTileSource)
-                {
-                    var layer = new TileLayer(tileSource, fetchStrategy: new FetchStrategy(3), fetchToFeature: DrawableTile.DrawableTileToFeature, fetchGetTile: tileSource.GetVectorTile);
-                    layer.MinVisible = tileSource.Schema.Resolutions.Last().Value.UnitsPerPixel;
-                    layer.MaxVisible = tileSource.Schema.Resolutions.First().Value.UnitsPerPixel;
-                    layer.Style = new DrawableTileStyle();
-                    map.Layers.Add(layer);
-                }
+                //if (tileSource is MGLRasterTileSource)
+                //{
+                //    var layer = new TileLayer(tileSource, fetchStrategy: new FetchStrategy(3), fetchToFeature: DrawableTile.DrawableTileToFeature, fetchGetTile: tileSource.GetVectorTile);
+                //    layer.MinVisible = tileSource.Schema.Resolutions.Last().Value.UnitsPerPixel;
+                //    layer.MaxVisible = tileSource.Schema.Resolutions.First().Value.UnitsPerPixel;
+                //    layer.Style = new DrawableTileStyle();
+                //    map.Layers.Add(layer);
+                //}
             }
 
             mapView.Navigator.NavigateTo(new Geometries.Point(825650.0, 5423050.0), 12.ToResolution());
@@ -125,7 +187,6 @@ namespace Mapsui.Samples.Forms
                     animatedNavi.ZoomIn();
                 else
                     mapView.Navigator.ZoomIn();
-                mapView.Navigator.ZoomIn();
             };
 
             btnZoomOut.Clicked += (s, e) =>

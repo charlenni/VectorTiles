@@ -82,7 +82,7 @@ namespace VectorTiles
             Type = GeometryType.Unknown;
         }
 
-        public void AddToPath(Path path, Rect clipRect)
+        public void AddToPath(Path path)
         {
             int start = 0;
 
@@ -102,6 +102,15 @@ namespace VectorTiles
 
                 start += index[i];
             }
+        }
+
+        public Path CreatePath()
+        {
+            Path path = new Path();
+
+            AddToPath(path);
+
+            return path;
         }
 
         public void Scale(float factor)

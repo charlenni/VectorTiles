@@ -5,7 +5,7 @@ namespace VectorTiles.MapboxGL
 {
     public class MGLPaint : IVectorPaint
     {
-        SKPaint paint = new SKPaint() { IsAntialias = true };  // Set this bei default
+        SKPaint paint = new SKPaint() { IsAntialias = true, BlendMode = SKBlendMode.SrcOver };  // Set this bei default
         SKPaint lastPaint;
         EvaluationContext lastContext;
         float strokeWidth;
@@ -86,7 +86,7 @@ namespace VectorTiles.MapboxGL
 
         #region Color
 
-        SKColor color = new SKColor(0, 0, 0, 0);
+        SKColor color = SKColor.Empty;
 
         bool variableColor = false;
 

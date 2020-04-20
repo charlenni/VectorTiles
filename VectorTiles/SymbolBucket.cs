@@ -8,7 +8,8 @@ namespace VectorTiles
     {
         IVectorStyleLayer styleLayer;
         IVectorSymbolStyler styler;
-        List<Symbol> symbols = new List<Symbol>();
+
+        public List<Symbol> Symbols = new List<Symbol>();
 
         public SymbolBucket(IVectorStyleLayer style)
         {
@@ -32,19 +33,19 @@ namespace VectorTiles
                         {
                             var iconTextSymbol = styler.CreateIconTextSymbol(point, element.Tags, context);
                             if (iconTextSymbol != null)
-                                symbols.Add(iconTextSymbol);
+                                Symbols.Add(iconTextSymbol);
                         }
                         else if (styler.HasIcon)
                         {
                             var iconSymbol = styler.CreateIconSymbol(point, element.Tags, context);
                             if (iconSymbol != null)
-                                symbols.Add(iconSymbol);
+                                Symbols.Add(iconSymbol);
                         }
                         else if (styler.HasText)
                         {
                             var textSymbol = styler.CreateTextSymbol(point, element.Tags, context);
                             if (textSymbol != null)
-                                symbols.Add(textSymbol);
+                                Symbols.Add(textSymbol);
                         }
                     }
                     break;
@@ -53,7 +54,7 @@ namespace VectorTiles
                         return;
                     var list = styler.CreatePathSymbols(element, context);
                     if (list != null)
-                        symbols.AddRange(list);
+                        Symbols.AddRange(list);
                     break;
                 case GeometryType.Polygon:
                     var t3 = styleLayer.SourceLayer;
@@ -66,7 +67,7 @@ namespace VectorTiles
 
         public void OnDraw(SKCanvas canvas, EvaluationContext context)
         {
-            foreach (var symbol in symbols)
+            foreach (var symbol in Symbols)
             {
                 symbol.OnDraw(canvas, context);
             }

@@ -31,6 +31,7 @@ namespace Mapsui.Samples.Forms
         }
 
         public Drawable Data { get; }
+
         public long TickFetched { get; }
 
         public override BoundingBox BoundingBox => boundingBox;

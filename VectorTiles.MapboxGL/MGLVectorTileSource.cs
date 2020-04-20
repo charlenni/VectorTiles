@@ -91,7 +91,7 @@ namespace VectorTiles.MapboxGL
             var zoom = float.Parse(tileInfo.Index.Level);
 
             // If zoom level higher
-            if (zoom > maxZoomLevelProvider)
+            if (zoom > MinVisible.ToZoomLevel()) //maxZoomLevelProvider)
                 return null;
 
             // Get data for this tile
@@ -147,7 +147,7 @@ namespace VectorTiles.MapboxGL
                 return (tileData, Overzoom.None);
 
             // We only create overzoom tiles when zoom is between min and max zoom
-            if (zoom <= Source.Schema.Resolutions.First().Value.UnitsPerPixel.ToZoomLevel() || zoom > Source.Schema.Resolutions.Last().Value.UnitsPerPixel.ToZoomLevel())
+            if (zoom <= MaxVisible.ToZoomLevel() || zoom > MinVisible.ToZoomLevel()) //Source.Schema.Resolutions.First().Value.UnitsPerPixel.ToZoomLevel() || zoom > Source.Schema.Resolutions.Last().Value.UnitsPerPixel.ToZoomLevel())
                 return (null, Overzoom.None);
 
             var info = tileInfo;
@@ -192,7 +192,7 @@ namespace VectorTiles.MapboxGL
 
             try
             {
-                tileDataParser.Parse(tileInfo, stream, sink, overzoom, new TileClipper(new Rect(-1, -1, TileSize + 1, TileSize + 1)));
+                tileDataParser.Parse(tileInfo, stream, sink, overzoom, new TileClipper(new Rect(-8, -8, TileSize + 8, TileSize + 8)));
             }
             catch (Exception e)
             {
