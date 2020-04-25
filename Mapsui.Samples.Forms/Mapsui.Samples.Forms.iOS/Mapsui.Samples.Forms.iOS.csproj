@@ -135,6 +135,9 @@
     <PackageReference Include="Mapsui.Forms">
       <Version>2.0.0-b39</Version>
     </PackageReference>
+    <PackageReference Include="SkiaSharp">
+      <Version>1.68.2-preview.60</Version>
+    </PackageReference>
     <PackageReference Include="Topten.RichTextKit">
       <Version>0.1.118</Version>
     </PackageReference>
