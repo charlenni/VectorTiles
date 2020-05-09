@@ -72,7 +72,7 @@ namespace Mapsui.Samples.Forms
 
             mapView.Map = map;
             mapView.MyLocationLayer.Enabled = false;
-            //mapView.Navigator = new AnimatedNavigator(map, (IViewport)mapView.Viewport);
+            mapView.Navigator = new AnimatedNavigator(map, (IViewport)mapView.Viewport);
             mapView.Viewport.ViewportChanged += (s, args) => { Device.BeginInvokeOnMainThread(() => { lblInfo.Text = $"Zoom Level: {mapView.Viewport.Resolution.ToZoomLevel():0.0}"; }); };
             mapView.UseDoubleTap = false;
 
