@@ -1,5 +1,4 @@
 ﻿using SkiaSharp;
-using System;
 using System.Collections.Generic;
 
 namespace VectorTiles
@@ -19,6 +18,7 @@ namespace VectorTiles
 
         public void AddElement(VectorElement element, EvaluationContext context)
         {
+            // TODO: Remove, is only for tests
             if (styleLayer.SourceLayer == "poi")
             {
                 var t10 = 10;
@@ -52,9 +52,9 @@ namespace VectorTiles
                 case GeometryType.LineString:
                     if (styler == null)
                         return;
-                    var list = styler.CreatePathSymbols(element, context);
-                    if (list != null)
-                        Symbols.AddRange(list);
+                    var pathSymbol = styler.CreatePathSymbols(element, context);
+                    if (pathSymbol != null)
+                        Symbols.Add(pathSymbol);
                     break;
                 case GeometryType.Polygon:
                     var t3 = styleLayer.SourceLayer;

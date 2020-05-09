@@ -1,11 +1,8 @@
-﻿using SkiaSharp;
+﻿using BruTile;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-
-using Point = SkiaSharp.SKPoint;
 using Path = SkiaSharp.SKPath;
-using Rect = SkiaSharp.SKRect;
+using Point = SkiaSharp.SKPoint;
 
 namespace VectorTiles
 {
@@ -18,13 +15,15 @@ namespace VectorTiles
         List<int> index = new List<int>(64);
         TileClipper tileClipper;
 
-        public VectorElement(TileClipper clipper)
+        public VectorElement(TileClipper clipper, TileIndex tileIndex)
         {
             tileClipper = clipper;
             index.Add(0);
+
+            TileIndex = tileIndex;
         }
 
-        public VectorElement(TileClipper clipper, string layer, string id) : this(clipper)
+        public VectorElement(TileClipper clipper, TileIndex index, string layer, string id) : this(clipper, index)
         {
             Layer = layer;
             Id = id;
@@ -33,6 +32,8 @@ namespace VectorTiles
         public string Layer { get; set; }
 
         public string Id { get; set; }
+
+        public TileIndex TileIndex { get; }
 
         public GeometryType Type { get; private set; }
 

@@ -143,6 +143,10 @@ namespace VectorTiles.MapboxGL
 
             var result = new MGLIconSymbol();
 
+            result.Class = tags.ContainsKey("class") ? tags["class"].ToString() : string.Empty;
+            result.Subclass = tags.ContainsKey("subclass") ? tags["subclass"].ToString() : string.Empty;
+            result.Rank = tags.ContainsKey("rank") ? int.Parse(tags["rank"].ToString()) : 0;
+
             var iconName = ReplaceWithTags(IconImage.Evaluate(context.Zoom), tags, context);
 
             if (!string.IsNullOrEmpty(iconName))
@@ -164,6 +168,10 @@ namespace VectorTiles.MapboxGL
 
             var result = new MGLTextSymbol();
 
+            result.Class = tags.ContainsKey("class") ? tags["class"].ToString() : string.Empty;
+            result.Subclass = tags.ContainsKey("subclass") ? tags["subclass"].ToString() : string.Empty;
+            result.Rank = tags.ContainsKey("rank") ? int.Parse(tags["rank"].ToString()) : 0;
+
             var fieldName = ReplaceWithTags(TextField, tags, context);
 
             return result;
@@ -175,6 +183,10 @@ namespace VectorTiles.MapboxGL
                 return null;
 
             var result = new MGLIconTextSymbol();
+
+            result.Class = tags.ContainsKey("class") ? tags["class"].ToString() : string.Empty;
+            result.Subclass = tags.ContainsKey("subclass") ? tags["subclass"].ToString() : string.Empty;
+            result.Rank = tags.ContainsKey("rank") ? int.Parse(tags["rank"].ToString()) : 0;
 
             var iconName = ReplaceWithTags(IconImage.Evaluate(context.Zoom), tags, context);
             var fieldName = ReplaceWithTags(TextField, tags, context);
@@ -189,9 +201,17 @@ namespace VectorTiles.MapboxGL
             return result;
         }
 
-        public IEnumerable<Symbol> CreatePathSymbols(VectorElement element, EvaluationContext context)
+        public Symbol CreatePathSymbols(VectorElement element, EvaluationContext context)
         {
-            return null;
+            var result = new MGLPathSymbol(element.TileIndex, element.Id);
+
+            result.Class = element.Tags.ContainsKey("class") ? element.Tags["class"].ToString() : string.Empty;
+            result.Subclass = element.Tags.ContainsKey("subclass") ? element.Tags["subclass"].ToString() : string.Empty;
+            result.Rank = element.Tags.ContainsKey("rank") ? int.Parse(element.Tags["rank"].ToString()) : 0;
+
+            result.Name = ReplaceWithTags(TextField, element.Tags, context);
+
+            return result;
         }
 
         private string ReplaceWithTags(string text, TagsCollection tags, EvaluationContext context)

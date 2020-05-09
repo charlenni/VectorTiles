@@ -22,7 +22,7 @@ namespace VectorTiles.MapboxGL.Parser
             // Get tile information from Pbf format
             var tile = Serializer.Deserialize<Tile>(stream);
 
-            VectorElement vectorElement = new VectorElement(clipper);
+            VectorElement vectorElement = new VectorElement(clipper, tileInfo.Index);
 
             foreach (var layer in tile.Layers)
             {

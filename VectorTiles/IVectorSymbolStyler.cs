@@ -16,6 +16,6 @@ namespace VectorTiles
 
         Symbol CreateIconTextSymbol(Point point, TagsCollection tags, EvaluationContext context);
 
-        IEnumerable<Symbol> CreatePathSymbols(VectorElement element, EvaluationContext context);
+        Symbol CreatePathSymbols(VectorElement element, EvaluationContext context);
     }
 }

@@ -73,6 +73,7 @@ namespace VectorTiles
                 if (style.SourceLayer != element.Layer)
                     continue;
 
+                // TODO: Remove, only for testing
                 if (style.Type == StyleType.Symbol && style.SourceLayer == "poi")
                 {
                     var name = style.SourceLayer;
@@ -99,9 +100,11 @@ namespace VectorTiles
                         if (element.IsLine || element.IsPolygon)
                             ((PathBucket)Buckets[i]).AddElement(element);
                         else
+                        {
                             // This are things like height of a building
                             // We don't use this up to now
-                            System.Diagnostics.Debug.WriteLine(element.Tags.ToString());
+                            //System.Diagnostics.Debug.WriteLine(element.Tags.ToString());
+                        }
                         break;
                     default:
                         // throw new Exception("Unknown style type");
@@ -119,8 +122,8 @@ namespace VectorTiles
         {
             canvas.Save();
 
-            var watch = new System.Diagnostics.Stopwatch();
-            watch.Start();
+            //var watch = new System.Diagnostics.Stopwatch();
+            //watch.Start();
 
             foreach (var bucket in Buckets)
             {
@@ -128,8 +131,8 @@ namespace VectorTiles
                     bucket.OnDraw(canvas, Context);
             }
 
-            watch.Stop();
-            System.Diagnostics.Debug.WriteLine($"Draw VectorTile ({TileInfo.Index.Level}/{TileInfo.Index.Col}/{TileInfo.Index.Row}): {watch.ElapsedMilliseconds}");
+            //watch.Stop();
+            //System.Diagnostics.Debug.WriteLine($"Draw VectorTile ({TileInfo.Index.Level}/{TileInfo.Index.Col}/{TileInfo.Index.Row}): {watch.ElapsedMilliseconds}");
 
             canvas.Restore();
         }

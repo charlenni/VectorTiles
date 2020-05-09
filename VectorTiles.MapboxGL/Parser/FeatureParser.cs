@@ -29,7 +29,7 @@ namespace VectorTiles.MapboxGL.Parser
             element.Clear();
 
             element.Layer = layerName;
-            element.Id = feature.Id.ToString();
+            element.Id = feature.Id.ToString() + tileInfo.Index.Level;
 
             var geometries =  GeometryParser.ParseGeometry(feature.Geometry, feature.Type, overzoom);
 

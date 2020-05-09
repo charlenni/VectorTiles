@@ -2,19 +2,18 @@
 using BruTile.MbTiles;
 using BruTile.Predefined;
 using BruTile.Web;
-using VectorTiles.Filter;
-using VectorTiles.MapboxGL.Converter;
-using VectorTiles.MapboxGL.Json;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using SkiaSharp;
 using SQLite;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using GeoAPI.Geometries;
-using SkiaSharp;
+using VectorTiles.Filter;
+using VectorTiles.MapboxGL.Converter;
 using VectorTiles.MapboxGL.Extensions;
+using VectorTiles.MapboxGL.Json;
 
 namespace VectorTiles.MapboxGL
 {
@@ -41,7 +40,7 @@ namespace VectorTiles.MapboxGL
             {
 
                 // Extract the main part from the JSON file
-                Center = jsonStyle.Center != null ? new Coordinate(jsonStyle.Center[0], jsonStyle.Center[1]) : new Coordinate()
+                Center = jsonStyle.Center != null ? new GeoPoint(jsonStyle.Center[0], jsonStyle.Center[1]) : new GeoPoint()
             };
 
             // Extract sprite atlas

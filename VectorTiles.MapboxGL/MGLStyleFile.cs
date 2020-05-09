@@ -1,6 +1,4 @@
-﻿using GeoAPI.Geometries;
-using SkiaSharp;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace VectorTiles.MapboxGL
 {
@@ -28,7 +26,7 @@ namespace VectorTiles.MapboxGL
         /// <summary>
         /// Center of map as provided in the style file
         /// </summary>
-        public Coordinate Center { get; internal set; }
+        public GeoPoint Center { get; internal set; }
 
         /// <summary>
         /// Sources is a list of all IDrawableTileSources, that this style file provides

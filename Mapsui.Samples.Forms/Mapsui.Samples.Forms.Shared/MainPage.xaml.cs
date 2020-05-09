@@ -119,6 +119,7 @@ namespace Mapsui.Samples.Forms
                         int numSymbols = 0;
 
                         var symbols = new List<Symbol>();
+                        var pathSymbols = new List<MGLPathSymbol>();
                         var rbush = new RBush<Symbol>();
 
                         // Check symbols, if they are visible or not. For this,
@@ -136,9 +137,10 @@ namespace Mapsui.Samples.Forms
 
                             foreach (var tile in tiles)
                             {
-                                if (tile.Buckets[i] == null)
+                                if (tile.Buckets[i] == null || ((SymbolBucket)tile.Buckets[i]).Symbols.Count == 0)
                                     continue;
 
+                                //symbols.AddRange(((SymbolBucket)tile.Buckets[i]).Symbols.Where((symbol) => !(symbol is MGLTextSymbol)));
                                 symbols.AddRange(((SymbolBucket)tile.Buckets[i]).Symbols);
 
                                 numSymbols += ((SymbolBucket)tile.Buckets[i]).Symbols.Count;
@@ -146,6 +148,42 @@ namespace Mapsui.Samples.Forms
 
                             if (symbols.Count == 0)
                                 continue;
+
+                            // If we have path symbols, then check, if there are path over tile borders
+                            if (symbols[0] is MGLPathSymbol)
+                            {
+                                int pos = 0;
+                                var sameSymbols = new List<MGLPathSymbol>();
+
+                                while (pos < symbols.Count)
+                                {
+                                    var pathSymbol = symbols[pos] as MGLPathSymbol;
+                                    var id = symbols[pos].Id;
+
+                                    sameSymbols.Add(pathSymbol);
+
+                                    var next = pos + 1;
+
+                                    while (next < symbols.Count)
+                                    {
+                                        if (symbols[next].Id == id)
+                                        {
+                                            // We have a symbol, which belongs to another symbol on another tile
+                                            sameSymbols.Add((MGLPathSymbol)symbols[next]);
+                                        }
+
+                                        next++;
+                                    }
+
+                                    // Now we have all tiles for this symbol ID
+                                    if (sameSymbols.Count > 1)
+                                    {
+                                        var found = true;
+                                    }
+
+                                    pos++;
+                                }
+                            }
 
                             // Now we have all symbols of one style layer, that should be 
                             // visible. So we could check, which symbol should be visible 
@@ -159,8 +197,10 @@ namespace Mapsui.Samples.Forms
                                 }
                             }
 
-                            System.Diagnostics.Debug.WriteLine($"Found {numSymbols} symbols in {numBuckets} buckets of {tiles.Length} tiles");
+                            //System.Diagnostics.Debug.WriteLine($"Found {numSymbols} symbols in {numBuckets} buckets of {tiles.Length} tiles");
                         };
+
+
 
                     };
 
